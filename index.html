@@ -1,1 +1,147 @@
 
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tuneza — Prototype résident</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #F5F6F3;
+      color: #13271E;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 42px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 42px;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      color: #66756E;
+      font-size: 18px;
+      margin-bottom: 45px;
+    }
+
+    .versions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #D5E0D9;
+      border-radius: 22px;
+      padding: 35px;
+      text-align: left;
+    }
+
+    .card h2 {
+      font-size: 26px;
+      margin-top: 0;
+    }
+
+    .card p {
+      color: #66756E;
+      line-height: 1.5;
+      min-height: 55px;
+    }
+
+    .button {
+      display: block;
+      margin-top: 25px;
+      padding: 15px 20px;
+      background: #116957;
+      color: white;
+      text-decoration: none;
+      text-align: center;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+
+    .button:hover {
+      background: #0D584A;
+    }
+
+    @media (max-width: 700px) {
+      .versions {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+
+      .logo {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <div class="logo">Tuneza</div>
+
+    <h1>Prototype résident</h1>
+
+    <div class="subtitle">
+      Choisissez l’expérience que vous souhaitez consulter.
+    </div>
+
+    <div class="versions">
+
+      <div class="card">
+        <h2>Desktop</h2>
+        <p>
+          Découvrez l’expérience Tuneza résident conçue pour ordinateur.
+        </p>
+
+        <a class="button" href="desktop.html">
+          Ouvrir la version Desktop
+        </a>
+      </div>
+
+      <div class="card">
+        <h2>Mobile</h2>
+        <p>
+          Découvrez l’expérience Tuneza résident conçue pour téléphone.
+        </p>
+
+        <a class="button" href="mobile.html">
+          Ouvrir la version Mobile
+        </a>
+      </div>
+
+    </div>
+
+  </main>
+
+</body>
+</html>
