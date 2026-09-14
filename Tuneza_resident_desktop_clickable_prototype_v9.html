@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tuneza — Resident Desktop Prototype</title>
+<style>
+:root{
+  --bg:#F5F6F3;
+  --panel:#FFFFFF;
+  --ink:#13271E;
+  --muted:#6B7873;
+  --green:#116957;
+  --green-2:#0C5A4B;
+  --mint:#E7F3ED;
+  --mint-2:#D5E8DE;
+  --sage:#C3D6CB;
+  --border:#DDE5E0;
+  --soft:#F8FAF8;
+  --danger:#B94C4C;
+  --warn:#D79725;
+  --blue:#4F88A9;
+  --shadow:0 10px 30px rgba(19,39,30,.06);
+  --radius:18px;
+  --radius-sm:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter, ui-sans-serif, -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+a{text-decoration:none;color:inherit}
+.app{min-height:100vh;display:grid;grid-template-columns:245px 1fr}
+.sidebar{
+  position:sticky;top:0;height:100vh;background:#FBFCFA;border-right:1px solid var(--border);
+  padding:26px 18px 22px;display:flex;flex-direction:column;z-index:5
+}
+.logo{font-size:30px;font-weight:850;letter-spacing:-1.6px;margin:2px 12px 24px}
+.logo span{color:var(--green)}
+.nav{display:grid;gap:6px}
+.nav-item{
+  border:0;background:transparent;color:#34483F;width:100%;display:flex;align-items:center;gap:13px;
+  padding:12px 13px;border-radius:12px;font-size:15px;text-align:left
+}
+.nav-item:hover{background:#F0F6F2}
+.nav-item.active{background:var(--mint);color:var(--green);font-weight:700}
+.nav-badge{
+  margin-left:auto;min-width:22px;height:22px;padding:0 7px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#116957;color:white;font-size:11px;font-weight:850;line-height:1
+}
+.nav-item.active .nav-badge{background:#0C5A4B}
+.notif-count{
+  position:absolute;top:2px;right:0;min-width:19px;height:19px;padding:0 5px;
+  border-radius:999px;background:#116957;color:#fff;border:2px solid #fff;
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:850
+}
+.manager-strip{
+  margin-top:18px;padding:16px 18px;border:1px solid #D5E8DE;border-radius:16px;
+  background:#EDF8F3;display:flex;align-items:center;gap:14px
+}
+.manager-strip .grow{flex:1}
+.manager-strip .meta{font-size:13px;color:#65756F;margin-top:3px}
+.timeline{display:grid;gap:10px}
+.timeline-item{display:grid;grid-template-columns:18px 1fr;gap:12px;align-items:start}
+.timeline-dot{width:12px;height:12px;border-radius:50%;background:#116957;margin-top:4px;box-shadow:0 0 0 4px #E5F3ED}
+.timeline-item .time{font-size:12px;color:#7B8983;margin-top:2px}
+.calendar-shell{display:grid;grid-template-columns:1.45fr .75fr;gap:18px}
+.month-card{padding:18px}
+.month-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.day-name{text-align:center;font-size:12px;font-weight:800;color:#708078;padding:7px}
+.day{min-height:104px;border:1px solid var(--border);border-radius:12px;background:#fff;padding:9px;position:relative}
+.day.muted-day{background:#F8FAF8;color:#98A39E}
+.day.today{border-color:#6BAF99;box-shadow:0 0 0 2px #E2F2EB}
+.day-num{font-size:13px;font-weight:800}
+.event-chip{margin-top:7px;padding:6px 7px;border-radius:8px;background:#E7F4FD;color:#367FA8;font-size:11px;font-weight:800}
+.event-chip.green{background:#E4F3EC;color:#116957}
+.event-button{
+  width:100%;margin-top:7px;padding:6px 7px;border-radius:8px;border:1px solid transparent;
+  background:#E7F4FD;color:#367FA8;font-size:11px;font-weight:800;text-align:left;line-height:1.2
+}
+.event-button.green{background:#E4F3EC;color:#116957}
+.event-button:hover{border-color:#A9CFC0;filter:brightness(.99)}
+.event-button:focus-visible{outline:3px solid #CFE9DE;outline-offset:2px}
+.detail-kv{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.detail-kv:last-child{border-bottom:0}
+.notification-row.clickable:hover{background:#F6FAF7}
+.history-row{display:grid;grid-template-columns:1.3fr .8fr .7fr 100px 120px;gap:12px;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)}
+.history-row:last-child{border-bottom:0}
+.icon{
+  width:21px;height:21px;display:grid;place-items:center;flex:0 0 21px;
+  color:currentColor
+}
+.icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.help{margin-top:auto;border-top:1px solid var(--border);padding:17px 9px 0;display:flex;gap:10px;color:#52645E;font-size:13px;line-height:1.35}
+.shell{min-width:0}
+.topbar{
+  height:70px;background:rgba(255,255,255,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:flex-end;padding:0 34px;gap:18px;position:sticky;top:0;z-index:4
+}
+.search{
+  flex:1;max-width:760px;height:44px;border:1px solid var(--border);border-radius:13px;background:#fff;
+  display:flex;align-items:center;gap:10px;padding:0 15px;color:#73817B
+}
+.search input{border:0;outline:0;width:100%;background:transparent;color:var(--ink)}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:14px}
+.icon-btn{
+  width:42px;height:42px;border:0;background:transparent;border-radius:12px;display:grid;place-items:center;color:#253D34;position:relative
+}
+.icon-btn:hover{background:#F0F5F2}
+.dot{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--green);top:9px;right:9px;border:2px solid white}
+.profile-chip{border:0;background:transparent;display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:14px}
+.profile-chip:hover{background:#F0F5F2}
+.avatar{width:38px;height:38px;border-radius:50%;background:#D7EFE4;color:var(--green);display:grid;place-items:center;font-weight:800}
+.content{padding:30px 34px 54px;max-width:1510px;margin:0 auto}
+.page{display:none;animation:fade .2s ease}
+.page.active{display:block}
+@keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#718079;font-weight:800;margin-bottom:6px}
+h1{font-size:38px;line-height:1.05;letter-spacing:-1.6px;margin:0}
+.subtitle{color:var(--muted);font-size:16px;margin:7px 0 24px}
+.page-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:24px}
+.page-head .actions{margin-left:auto;display:flex;gap:10px}
+.btn{
+  border:1px solid var(--border);background:#fff;color:var(--ink);border-radius:12px;padding:11px 16px;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px
+}
+.btn:hover{background:#F7FAF8}
+.btn.primary{background:var(--green);color:white;border-color:var(--green)}
+.btn.primary:hover{background:var(--green-2)}
+.btn.soft{background:var(--mint);color:var(--green);border-color:#D5EADF}
+.btn.danger{color:var(--danger)}
+.grid{display:grid;gap:18px}
+.grid.two{grid-template-columns:minmax(0,1.45fr) minmax(330px,.85fr)}
+.grid.equal{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card.pad{padding:20px}
+.card-title{font-size:20px;font-weight:800;margin:0 0 14px}
+.small-title{font-size:15px;font-weight:800;margin:0 0 8px}
+.muted{color:var(--muted)}
+.unit-hero{
+  min-height:230px;border-radius:22px;overflow:hidden;position:relative;color:white;padding:26px;
+  background:
+    linear-gradient(90deg,rgba(6,78,61,.98) 0%,rgba(6,78,61,.84) 40%,rgba(9,55,47,.24) 70%),
+    linear-gradient(135deg,#8FB0A0 0%,#C6D8CC 50%,#E6D8B8 100%);
+  border:1px solid rgba(255,255,255,.15)
+}
+.unit-hero:after{
+  content:"";position:absolute;right:5%;bottom:-18px;width:46%;height:82%;
+  background:
+   linear-gradient(90deg,transparent 0 8%,#C7C6B8 8% 14%,transparent 14% 20%,#F4F1E7 20% 68%,transparent 68%),
+   linear-gradient(#E8E5DC 0 12%,transparent 12% 21%,#E8E5DC 21% 35%,transparent 35% 47%,#E8E5DC 47% 61%,transparent 61% 73%,#E8E5DC 73% 87%,transparent 87%);
+  opacity:.9;clip-path:polygon(5% 20%,54% 0,100% 18%,100% 100%,0 100%);filter:drop-shadow(0 12px 10px rgba(0,0,0,.18))
+}
+.unit-copy{position:relative;z-index:2;display:flex;gap:18px;align-items:flex-start}
+.unit-badge{width:74px;height:74px;border-radius:18px;background:rgba(41,162,128,.38);display:grid;place-items:center;border:1px solid rgba(255,255,255,.13)}
+.unit-name{font-size:31px;font-weight:850;letter-spacing:-1px}
+.unit-meta{font-size:18px;line-height:1.45}
+.good{display:inline-flex;align-items:center;gap:8px;margin-top:18px;background:#EBF8F2;color:#116957;padding:9px 15px;border-radius:999px;font-weight:800}
+.quick-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.quick-card{border:1px solid var(--border);background:#fff;border-radius:15px;padding:18px 10px;text-align:center;min-height:106px}
+.quick-card:hover{border-color:#BFD6CA;background:#FAFCFB;transform:translateY(-1px)}
+.quick-icon{width:32px;height:32px;color:var(--green);margin:0 auto 10px}
+.section{margin-top:24px}
+.section-head{display:flex;align-items:center;margin-bottom:12px}
+.section-head h2{margin:0;font-size:22px}
+.section-head .link{margin-left:auto;color:var(--green);font-weight:800;font-size:14px;border:0;background:transparent}
+.list{display:grid;gap:10px}
+.row{
+  background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:13px
+}
+.row.clickable:hover{border-color:#BDD3C8;background:#FBFDFC}
+.row .grow{flex:1;min-width:0}
+.row-title{font-weight:800}
+.row-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.row-icon{width:42px;height:42px;border-radius:12px;background:#E9F5EF;color:var(--green);display:grid;place-items:center;flex:0 0 42px}
+.chev{color:#6D7B76;font-size:22px}
+.status{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;white-space:nowrap}
+.status.planned{background:#E7F4FD;color:#367FA8}
+.status.progress{background:#E7F5EF;color:#0C745B}
+.status.done{background:#DFF4E8;color:#11734F}
+.status.important{background:#FDE8E8;color:#C34C4C}
+.status.maintenance{background:#E2F5EA;color:#247A5A}
+.status.info{background:#E6F1FA;color:#3F7C9B}
+.info-list{overflow:hidden}
+.info-list .line{padding:16px 18px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:42px 1fr 22px;gap:12px;align-items:center}
+.info-list .line:last-child{border-bottom:0}
+.info-list .line:hover{background:#FBFDFC}
+.split-panel{display:grid;grid-template-columns:360px 1fr;min-height:620px;overflow:hidden}
+.split-panel .left{border-right:1px solid var(--border);padding:18px;background:#FCFDFC}
+.split-panel .right{padding:20px}
+.request-item{padding:13px;border-radius:12px;border:1px solid transparent;display:flex;gap:10px;align-items:center;margin-bottom:7px}
+.request-item:hover,.request-item.active{background:#F0F8F4;border-color:#D5E8DE}
+.progress{display:flex;align-items:center;gap:0;margin:20px 0}
+.progress .step{flex:1;text-align:center;position:relative;color:#7A8882;font-size:13px}
+.progress .step:before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid #C7D2CC;background:white;display:block;margin:0 auto 8px;position:relative;z-index:2}
+.progress .step:not(:last-child):after{content:"";height:2px;background:#D8E1DC;position:absolute;top:7px;left:50%;right:-50%}
+.progress .step.active{color:var(--green);font-weight:800}
+.progress .step.active:before{background:var(--green);border-color:var(--green)}
+.form-grid{display:grid;gap:16px}
+.field label{display:block;font-size:13px;font-weight:800;margin-bottom:7px}
+.input,.textarea,.select{width:100%;border:1px solid var(--border);border-radius:12px;background:white;padding:12px 13px;outline:none}
+.textarea{min-height:120px;resize:vertical}
+.input:focus,.textarea:focus,.select:focus{border-color:#79B5A2;box-shadow:0 0 0 3px #E5F3ED}
+.category-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.category{border:1px solid var(--border);border-radius:12px;background:white;padding:13px;text-align:center;font-weight:700}
+.category.selected{border-color:#62A68F;background:#EEF8F3;color:var(--green)}
+.upload{border:1.5px dashed #C9D5CF;border-radius:14px;min-height:110px;display:grid;place-items:center;text-align:center;color:#6C7974;background:#FBFCFB}
+.calendar-row{display:grid;grid-template-columns:1.4fr .8fr .8fr 100px 120px 44px;gap:10px;align-items:center;padding:14px 15px;border-bottom:1px solid var(--border)}
+.calendar-row:last-child{border-bottom:0}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:1px solid var(--border);background:white;padding:9px 16px;border-radius:11px;font-weight:700;color:#53625D}
+.tab.active{background:var(--green);border-color:var(--green);color:white}
+.notice{padding:18px;display:grid;grid-template-columns:48px 1fr auto;gap:14px;align-items:start}
+.notice+.notice{border-top:1px solid var(--border)}
+.doc-row{display:grid;grid-template-columns:48px 1fr 92px 40px;gap:12px;align-items:center;padding:15px 16px;border-bottom:1px solid var(--border)}
+.doc-row:last-child{border-bottom:0}
+.market-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.pill{border:1px solid var(--border);background:white;border-radius:999px;padding:9px 13px;font-weight:700}
+.pill.active{background:#EDF8F3;border-color:#82BCA8;color:var(--green)}
+.listing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.listing{overflow:hidden}
+.listing-img{
+  height:190px;background:
+    linear-gradient(180deg,rgba(255,255,255,0) 45%,rgba(18,38,30,.12)),
+    linear-gradient(135deg,#D6C2A8,#EEE9DF 35%,#B7CDBC 36%,#DDE8DF 65%,#D7B58C);
+  position:relative
+}
+.listing-img:after{
+  content:"";position:absolute;left:8%;right:8%;bottom:18%;height:38%;border-radius:7px;
+  background:linear-gradient(90deg,#F4F1EA 0 30%,#D4B896 30% 38%,#F4F1EA 38% 72%,#A7BCA8 72% 78%,#F4F1EA 78%);
+  box-shadow:0 8px 18px rgba(0,0,0,.08)
+}
+.favorite{position:absolute;right:12px;top:12px;z-index:2;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.92)}
+.listing-body{padding:15px}
+.listing-title{font-size:18px;font-weight:850}
+.listing-meta{font-size:13px;color:var(--muted);margin:4px 0 12px}
+.detail-hero{height:330px;border-radius:20px;background:linear-gradient(135deg,#D6C2A8,#EEE9DF 35%,#B7CDBC 36%,#DDE8DF 65%,#D7B58C);position:relative;overflow:hidden}
+.detail-hero:after{content:"";position:absolute;left:8%;right:8%;bottom:12%;height:42%;border-radius:8px;background:linear-gradient(90deg,#F6F2EA 0 30%,#CDAA7B 30% 38%,#F6F2EA 38% 72%,#AEC2B1 72% 78%,#F6F2EA 78%);box-shadow:0 10px 20px rgba(0,0,0,.09)}
+.manager-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.contact-box{padding:18px;border:1px solid var(--border);border-radius:15px;background:#fff}
+.guide-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.guide-card{padding:16px;border:1px solid var(--border);border-radius:14px;background:white;display:flex;gap:12px}
+.message-layout{display:grid;grid-template-columns:360px 1fr;min-height:650px;overflow:hidden}
+.message-list{border-right:1px solid var(--border);background:#FCFDFC;padding:15px}
+.thread{display:flex;flex-direction:column;padding:20px}
+.messages{flex:1;display:flex;flex-direction:column;gap:12px;padding:14px 0 18px}
+.bubble{max-width:72%;padding:12px 14px;border-radius:14px;line-height:1.45}
+.bubble.them{background:#EDF7F2;align-self:flex-start}
+.bubble.me{background:#E7EEF6;align-self:flex-end}
+.composer{display:flex;gap:10px;border-top:1px solid var(--border);padding-top:14px}
+.composer input{flex:1}
+.conversation-item{
+  width:100%;padding:13px;border-radius:12px;border:1px solid transparent;background:transparent;
+  display:flex;gap:10px;align-items:flex-start;text-align:left;margin-bottom:7px
+}
+.conversation-item:hover,.conversation-item.active{background:#F0F8F4;border-color:#D5E8DE}
+.conversation-item .subject{font-weight:850;line-height:1.25}
+.conversation-item .preview{font-size:12px;color:#718079;margin-top:4px;line-height:1.35}
+.chat-title{font-size:21px;font-weight:850;letter-spacing:-.4px}
+.chat-context{font-size:13px;color:#6B7873;margin-top:4px}
+.new-chat-form{display:grid;gap:16px;max-width:720px}
+.new-chat-help{padding:14px;border-radius:12px;background:#F1F8F4;color:#51655D;font-size:13px}
+.notification-row{display:grid;grid-template-columns:42px 1fr auto;gap:12px;padding:15px;border-bottom:1px solid var(--border);align-items:center}
+.profile-head{display:flex;align-items:center;gap:15px;padding:18px}
+.profile-head .avatar{width:64px;height:64px;font-size:20px}
+.rule-layout{display:grid;grid-template-columns:250px 1fr;gap:18px}
+.toc{padding:14px}
+.toc button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:10px}
+.toc button.active,.toc button:hover{background:#EDF7F2;color:var(--green);font-weight:800}
+.rule-content{padding:22px}
+.rule-section{padding:18px 0;border-bottom:1px solid var(--border)}
+.rule-section:last-child{border-bottom:0}
+.overlay{
+  position:fixed;inset:0;background:rgba(12,29,23,.18);display:none;align-items:flex-start;justify-content:flex-end;padding:80px 28px;z-index:20
+}
+.overlay.show{display:flex}
+.popover{width:360px;max-height:70vh;overflow:auto;background:white;border:1px solid var(--border);border-radius:18px;box-shadow:0 18px 60px rgba(19,39,30,.18);padding:10px}
+.popover .notification-row{border-radius:12px}
+.popover .notification-row:hover{background:#F6FAF7}
+.notifications-header{
+  display:flex;align-items:center;gap:14px;padding:10px 10px 14px
+}
+.notifications-header strong{
+  font-size:20px;letter-spacing:-.3px
+}
+.notifications-view-all{
+  margin-left:auto;
+  border:1px solid #CFE0D7;
+  background:#F8FBF9;
+  color:#18372D;
+  border-radius:14px;
+  padding:10px 16px;
+  font-weight:800;
+  font-size:14px;
+  line-height:1;
+  box-shadow:none;
+  transition:background .15s ease,border-color .15s ease,transform .15s ease
+}
+.notifications-view-all:hover{
+  background:#EDF7F2;
+  border-color:#AFCFBE;
+  transform:translateY(-1px)
+}
+.notifications-view-all:focus-visible{
+  outline:3px solid #CFE9DE;
+  outline-offset:2px
+}
+.file-upload-status{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;margin:0 0 18px;
+  border:1px solid #D5E8DE;border-radius:12px;background:#F3F9F6;color:#355248
+}
+.file-upload-status strong{color:#13271E}
+.file-upload-status.hidden{display:none}
+.document-actions{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.toast{position:fixed;right:30px;bottom:30px;background:#17392F;color:white;border-radius:12px;padding:13px 16px;box-shadow:var(--shadow);display:none;z-index:50}
+.toast.show{display:block}
+@media (max-width:1100px){
+  .app{grid-template-columns:210px 1fr}
+  .content{padding:24px}
+  .quick-grid{grid-template-columns:repeat(3,1fr)}
+  .grid.two,.manager-grid{grid-template-columns:1fr}
+  .listing-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">Tune<span>z</span>a</div>
+    <nav class="nav" id="sideNav"></nav>
+    <div class="help">
+      <div class="icon" id="helpIcon"></div>
+      <div><strong>Besoin d'aide ?</strong><br>Communiquez avec votre gestionnaire.</div>
+    </div>
+  </aside>
+
+  <main class="shell">
+    <header class="topbar">
+      <div class="top-actions">
+        <button class="icon-btn" id="notifButton" aria-label="Notifications"><span class="notif-count" id="topNotifCount">7</span><span class="icon" id="bellIcon"></span></button>
+        <button class="profile-chip" data-go="profile">
+          <span class="avatar">MC</span><strong>Maya C.</strong><span>⌄</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- HOME -->
+      <section class="page active" id="page-home">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">Résident</div>
+            <h1>Bonjour Maya !</h1>
+            <div class="subtitle">Tout est en ordre aujourd’hui.</div>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="unit-hero">
+            <div class="unit-copy">
+              <div class="unit-badge"><span class="icon" data-icon="building"></span></div>
+              <div><div class="unit-name">Apt 101</div><div class="unit-meta">Riverside House<br>Montréal, QC</div><div class="good">✓ En règle</div></div>
+            </div>
+          </div>
+          <div class="card pad" style="display:flex;align-items:center;justify-content:center;background:#F1F8F4">
+            <button class="btn primary" data-go="new-request" style="width:100%;font-size:16px;padding:16px">＋ Nouvelle demande</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-head"><h2>Accès rapides</h2></div>
+          <div class="quick-grid">
+            <button class="quick-card" data-go="unit"><div class="quick-icon" data-icon="home"></div><strong>Mon logement</strong></button>
+            <button class="quick-card" data-go="requests"><div class="quick-icon" data-icon="wrench"></div><strong>Demandes</strong></button>
+            <button class="quick-card" data-go="appointments"><div class="quick-icon" data-icon="calendar"></div><strong>Rendez-vous</strong></button>
+            <button class="quick-card" data-go="documents"><div class="quick-icon" data-icon="file"></div><strong>Documents</strong></button>
+            <button class="quick-card" data-go="notices"><div class="quick-icon" data-icon="megaphone"></div><strong>Avis</strong></button>
+            <button class="quick-card" data-go="marketplace"><div class="quick-icon" data-icon="search"></div><strong>Chercher un logement</strong></button>
+          </div>
+        </div>
+
+        <div class="grid equal section">
+          <div>
+            <div class="section-head"><h2>Mes demandes récentes</h2><button class="link" data-go="requests">Voir tout →</button></div>
+            <div class="list">
+              <button class="row clickable" data-request="faucet"><div class="row-icon" data-icon="wrench"></div><div class="grow"><div class="row-title">Robinet de cuisine qui fuit</div><div class="row-sub">Soumise le 11 sept. 2024</div></div><span class="status planned">Prévu</span><span class="chev">›</span></button>
+              <button class="row clickable" data-request="light"><div class="row-icon" data-icon="bulb"></div><div class="grow"><div class="row-title">Éclairage du salon défectueux</div><div class="row-sub">Soumise le 28 août 2024</div></div><span class="status progress">En cours</span><span class="chev">›</span></button>
+              <button class="row clickable" data-request="closet"><div class="row-icon" data-icon="door"></div><div class="grow"><div class="row-title">Porte de garde-robe</div><div class="row-sub">Soumise le 12 août 2024</div></div><span class="status done">Terminé</span><span class="chev">›</span></button>
+            </div>
+          </div>
+          <div>
+            <div class="section-head"><h2>Aujourd'hui</h2></div>
+            <button class="row clickable" data-appointment="appt-light-repair" style="width:100%"><div class="row-icon" data-icon="calendar"></div><div class="grow"><div class="row-title">Intervention – éclairage du salon</div><div class="row-sub">Aujourd’hui · 14:00 – 15:00 · Apt 101</div></div><span class="chev">›</span></button>
+            <div class="row" style="margin-top:10px;background:#EDF8F3;border-color:#D8EADF"><div class="row-icon" data-icon="info"></div><div class="grow"><div class="row-title">Un rendez-vous est prévu aujourd'hui.</div><div class="row-sub">Assurez-vous d’être présent au moment prévu.</div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MY UNIT -->
+      <section class="page" id="page-unit">
+        <div class="page-head"><div><div class="eyebrow">Mon logement</div><h1>Mon logement</h1><div class="subtitle">Toutes les informations de votre logement au même endroit.</div></div></div>
+        <div class="grid two">
+          <div>
+            <div class="unit-hero">
+              <div class="unit-copy">
+                <div class="unit-badge"><span class="icon" data-icon="building"></span></div>
+                <div><div class="unit-name">Apt 101</div><div class="unit-meta">Riverside House<br>Montréal, QC</div><div class="good">✓ En règle</div></div>
+              </div>
+            </div>
+            <div class="card section">
+              <div class="card-title" style="padding:18px 18px 0">Informations du logement</div>
+              <div class="info-list">
+                <div class="line"><div class="row-icon" data-icon="pin"></div><div><strong>Adresse</strong><div class="muted">1230, rue Saint-Jacques<br>Montréal, QC H3C 1K9</div></div><span class="chev">›</span></div>
+                <div class="line"><div class="row-icon" data-icon="home"></div><div><strong>Type de logement</strong><div class="muted">3 1/2</div></div><span class="chev">›</span></div>
+                <div class="line"><div class="row-icon" data-icon="calendar"></div><div><strong>Date d'occupation</strong><div class="muted">1er septembre 2023</div></div><span class="chev">›</span></div>
+                <div class="line"><div class="row-icon" data-icon="car"></div><div><strong>Stationnement</strong><div class="muted">Espace #24 (sous-sol)</div></div><span class="chev">›</span></div>
+              </div>
+            </div>
+            <div class="card pad section">
+              <div class="card-title">Actions</div>
+              <div class="list">
+                <button class="row clickable" data-go="documents"><div class="row-icon" data-icon="folder"></div><div class="grow row-title">Voir mes documents</div><span class="chev">›</span></button>
+                <button class="row clickable" data-go="marketplace"><div class="row-icon" data-icon="search"></div><div class="grow row-title">Chercher un logement</div><span class="chev">›</span></button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card pad">
+              <div class="card-title">Informations utiles</div>
+              <div class="list">
+                <button class="row clickable" data-go="rules"><div class="row-icon" data-icon="file"></div><div class="grow row-title">Règlements de l'immeuble</div><span class="chev">›</span></button>
+                <button class="row clickable" data-go="manager"><div class="row-icon" data-icon="user"></div><div class="grow row-title">Coordonnées du gestionnaire</div><span class="chev">›</span></button>
+                <button class="row clickable" data-go="move-guide"><div class="row-icon" data-icon="book"></div><div class="grow row-title">Guide d'emménagement</div><span class="chev">›</span></button>
+              </div>
+            </div>
+            <div class="card pad section" style="background:#F0F8F4">
+              <div class="card-title">Ressources rapides</div>
+              <button class="row clickable" data-go="messages" style="width:100%;background:#E4F3EC"><div class="row-icon" data-icon="info"></div><div class="grow"><div class="row-title">Une question sur votre logement ?</div><div class="row-sub">Consultez le guide du résident ou communiquez avec votre gestionnaire.</div></div><span class="chev">›</span></button>
+            </div>
+            <div class="card pad section">
+              <div class="card-title">Votre gestionnaire</div>
+              <div class="row" style="border:0;padding:0"><div class="row-icon" data-icon="user"></div><div class="grow"><div class="row-title">Équipe de gestion</div><div class="row-sub">Riverside House<br>514 555-0123<br>gestion@riversidehouse.ca</div></div><button class="btn soft" data-go="new-request">Faire une demande</button></div>
+            </div>
+            <div class="card pad section">
+              <div class="row" style="border:0;padding:0"><div class="row-icon" data-icon="building"></div><div class="grow"><div class="row-title">Envie de changer ?</div><div class="row-sub">Découvrez les logements disponibles dans d’autres immeubles, quartiers ou villes.</div></div><button class="btn primary" data-go="marketplace">Chercher un logement</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REQUESTS -->
+      <section class="page" id="page-requests">
+        <div class="page-head">
+          <div><div class="eyebrow">Entretien</div><h1>Demandes</h1><div class="subtitle">Soumettez une demande d’entretien et suivez son avancement.</div></div>
+          <div class="actions"><button class="btn primary" data-go="new-request">＋ Nouvelle demande</button></div>
+        </div>
+        <div class="card split-panel">
+          <div class="left">
+            <div class="small-title">Mes demandes</div>
+            <button class="request-item active" data-request="faucet"><div class="row-icon" data-icon="wrench"></div><div class="grow"><div class="row-title">Robinet de cuisine qui fuit</div><div class="row-sub">Soumise le 11 sept. 2024</div></div><span class="status planned">Prévu</span></button>
+            <button class="request-item" data-request="light"><div class="row-icon" data-icon="bulb"></div><div class="grow"><div class="row-title">Éclairage du salon défectueux</div><div class="row-sub">Soumise le 28 août 2024</div></div><span class="status progress">En cours</span></button>
+            <button class="request-item" data-request="closet"><div class="row-icon" data-icon="door"></div><div class="grow"><div class="row-title">Porte de garde-robe</div><div class="row-sub">Soumise le 12 août 2024</div></div><span class="status done">Terminé</span></button>
+          </div>
+          <div class="right">
+            <div class="page-head" style="margin-bottom:10px">
+              <div><div class="eyebrow">Aperçu de la demande</div><h2 style="margin:0">Robinet de cuisine qui fuit</h2><div class="muted">Soumise le 11 septembre 2024</div></div>
+              <span class="status planned">Prévu</span>
+            </div>
+            <div class="progress"><div class="step active">Prévu</div><div class="step">En cours</div><div class="step">Terminé</div></div>
+            <div class="card pad" style="background:#F7F9F8;box-shadow:none">
+              <strong>Intervention planifiée.</strong>
+              <div class="muted" style="margin-top:5px">Une intervention est prévue le vendredi 13 septembre, de 10:00 à 12:00.</div>
+            </div>
+            <div class="grid equal section">
+              <button class="card pad clickable" data-appointment="appt-faucet" style="text-align:left">
+                <div class="small-title">Rendez-vous lié</div>
+                <strong>Vendredi 13 septembre 2024</strong><br><span class="muted">10:00 – 12:00 · Apt 101</span>
+              </button>
+              <div class="card pad"><div class="small-title">Accès au logement</div><div class="muted">Accès autorisé pendant ce créneau.</div><div style="margin-top:15px"><span class="status progress">Autorisé</span></div></div>
+            </div>
+            <div class="section">
+              <div class="small-title">Dernières mises à jour</div>
+              <div class="card pad" style="box-shadow:none;background:#FBFDFC">
+                <div class="timeline">
+                  <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Rendez-vous confirmé</strong><div class="time">12 sept. · 09:15</div></div></div>
+                  <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Intervention planifiée</strong><div class="time">11 sept. · 09:14</div></div></div>
+                  <div class="timeline-item"><span class="timeline-dot"></span><div><strong>Demande reçue</strong><div class="time">11 sept. · 08:52</div></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="section" style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn primary" data-request="faucet">Voir tous les détails</button>
+              <button class="btn" data-go="calendar">Voir calendrier</button>
+            </div>
+          </div>
+        </div>
+        <div class="manager-strip">
+          <div class="row-icon" data-icon="user"></div>
+          <div class="grow"><strong>Gestion immobilière Riverside</strong><div class="meta">514 555-0123 · gestion@riversidehouse.ca</div></div>
+          <button class="btn" data-go="manager">Voir les coordonnées</button>
+          <button class="btn primary" data-go="new-request">Faire une demande</button>
+        </div>
+      </section>
+
+      <!-- REQUEST DETAIL -->
+      <section class="page" id="page-request-detail">
+        <div class="page-head">
+          <div><button class="btn" data-go="requests">← Mes demandes</button><div style="height:12px"></div><h1 id="requestDetailTitle">Robinet de cuisine qui fuit</h1><div class="subtitle" id="requestDetailSubmitted">Soumise le 11 septembre 2024</div></div>
+          <span class="status planned" id="requestDetailStatus">Prévu</span>
+        </div>
+        <div class="grid two">
+          <div>
+            <div class="card pad">
+              <div class="progress" id="requestDetailProgress"></div>
+              <div class="row" style="background:#F7F9F8"><div class="row-icon" data-icon="info"></div><div><div class="row-title" id="requestDetailStateTitle"></div><div class="row-sub" id="requestDetailStateText"></div></div></div>
+              <div class="section" id="requestAppointmentSection"></div>
+              <div class="section"><div class="small-title">Messages</div><div class="bubble them" id="requestManagerMessage"></div><div class="bubble me">Merci pour la mise à jour.</div><div class="composer"><input class="input" placeholder="Écrire un message..."><button class="btn primary" onclick="toast('Message envoyé.')">Envoyer</button></div></div>
+            </div>
+          </div>
+          <div>
+            <div class="card pad">
+              <div class="card-title">Détails de la demande</div>
+              <div class="list">
+                <div class="row"><div class="row-icon" data-icon="wrench"></div><div class="grow"><div class="row-title">Catégorie</div><div class="row-sub" id="requestDetailCategory"></div></div></div>
+                <div class="row"><div class="row-icon" data-icon="pin"></div><div class="grow"><div class="row-title">Localisation</div><div class="row-sub">Apt 101</div></div></div>
+                <div class="row"><div class="row-icon" data-icon="meter"></div><div class="grow"><div class="row-title">Niveau d'urgence</div><div class="row-sub" id="requestDetailUrgency"></div></div></div>
+              </div>
+              <div class="section"><div class="small-title">Description</div><div class="muted" id="requestDetailDescription"></div></div>
+              <div class="section"><div class="small-title">Pièce jointe</div><div class="upload" id="requestDetailPhoto"></div></div>
+              <div class="section" id="requestHistorySection"></div>
+              <div class="section" id="requestFeedbackSection"></div>
+            </div>
+          </div>
+        </div>
+        <div class="manager-strip">
+          <div class="row-icon" data-icon="user"></div>
+          <div class="grow"><strong>Besoin de joindre votre gestionnaire ?</strong><div class="meta">Gestion immobilière Riverside · 514 555-0123</div></div>
+          <button class="btn" data-go="manager">Coordonnées</button>
+          <button class="btn primary" type="button" data-request-chat>Envoyer un message</button>
+        </div>
+      </section>
+
+      <!-- NEW REQUEST -->
+      <section class="page" id="page-new-request">
+        <div class="page-head"><div><div class="eyebrow">Demandes</div><h1>Nouvelle demande</h1><div class="subtitle">Décrivez-nous la situation et nous nous en occupons.</div></div></div>
+        <div class="grid two">
+          <div class="card pad">
+            <div class="form-grid">
+              <div class="field"><label>1. Quelle est le problème ?</label>
+                <div class="category-grid">
+                  <button class="category selected">🔧 Plomberie</button><button class="category">⚡ Électricité</button><button class="category">♨ Chauffage</button>
+                  <button class="category">▣ Électroménager</button><button class="category">▥ Espaces communs</button><button class="category">••• Autre</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>2. Titre de la demande</label>
+                <input
+                  class="input"
+                  id="newRequestTitle"
+                  maxlength="80"
+                  placeholder="Ex. Robinet de cuisine qui fuit"
+                  style="height:48px;font-weight:700"
+                >
+                <div class="row-sub" style="margin-top:6px">Donnez un titre court et précis pour identifier facilement cette demande.</div>
+              </div>
+              <div class="field"><label>3. Description</label><textarea class="textarea" id="newRequestDescription" placeholder="Décrivez le problème en détail..."></textarea></div>
+              <div class="field"><label>4. Photos ou vidéos (optionnel)</label><div class="upload">📷<br>Ajouter des photos ou vidéos<br><small>JPG, PNG ou MP4</small></div></div>
+              <div class="field"><label>5. Niveau d'urgence</label><div class="category-grid"><button class="category">Faible</button><button class="category selected">Normal</button><button class="category">Élevé</button></div></div>
+              <button class="btn primary" id="submitNewRequest">Envoyer la demande</button>
+            </div>
+          </div>
+          <div>
+            <div class="card pad" style="background:#EDF8F3"><div class="card-title">Besoin d'aide ?</div><div class="muted">Si vous avez un doute sur la catégorie, choisissez celle qui se rapproche le plus de votre problème.</div></div>
+            <div class="card pad section"><div class="card-title">Exemples de demandes</div>
+              <div class="list">
+                <div class="row"><div class="row-icon" data-icon="wrench"></div><div><div class="row-title">Robinet qui fuit</div><div class="row-sub">Plomberie</div></div></div>
+                <div class="row"><div class="row-icon" data-icon="bulb"></div><div><div class="row-title">Aucune lumière dans une pièce</div><div class="row-sub">Électricité</div></div></div>
+                <div class="row"><div class="row-icon" data-icon="building"></div><div><div class="row-title">Porte d’entrée difficile à ouvrir</div><div class="row-sub">Espaces communs</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- APPOINTMENTS -->
+      <section class="page" id="page-appointments">
+        <div class="page-head">
+          <div><div class="eyebrow">Agenda</div><h1>Rendez-vous</h1><div class="subtitle">Consultez et gérez les rendez-vous qui concernent votre logement.</div></div>
+          <div class="actions"><button class="btn" data-go="calendar">▣ Voir calendrier</button></div>
+        </div>
+        <div class="tabs"><button class="tab active">Tous</button><button class="tab">Entretien</button><button class="tab">Inspection</button><button class="tab">Autre</button></div>
+
+        <div class="card section">
+          <div class="card-title" style="padding:18px 18px 0">Prochains rendez-vous</div>
+          <div class="calendar-row">
+            <button style="border:0;background:transparent;text-align:left;padding:0" data-appointment="appt-light-repair"><strong>Intervention – éclairage du salon</strong><div class="row-sub">Liée à la demande « Éclairage du salon défectueux »</div></button>
+            <div>Jeu. 12 sept. 2024</div><div>14:00 – 15:00<br><span class="muted">Apt 101</span></div><span class="status planned">Prévu</span>
+            <button class="btn" data-appointment="appt-light-repair">Voir détails</button><button class="icon-btn">•••</button>
+          </div>
+          <div class="calendar-row">
+            <button style="border:0;background:transparent;text-align:left;padding:0" data-appointment="appt-faucet"><strong>Intervention – robinet de cuisine</strong><div class="row-sub">Liée à la demande « Robinet de cuisine qui fuit »</div></button>
+            <div>Ven. 13 sept. 2024</div><div>10:00 – 12:00<br><span class="muted">Apt 101</span></div><span class="status planned">Prévu</span>
+            <button class="btn primary confirm-appt" data-confirm-appointment="appt-faucet">Confirmer</button><button class="icon-btn">•••</button>
+          </div>
+          <div class="calendar-row">
+            <button style="border:0;background:transparent;text-align:left;padding:0" data-appointment="appt-annual"><strong>Inspection annuelle du logement</strong><div class="row-sub">Inspection annoncée dans les avis de l’immeuble</div></button>
+            <div>Lun. 23 sept. 2024</div><div>10:00 – 10:30<br><span class="muted">Apt 101</span></div><span class="status planned">Prévu</span>
+            <button class="btn" data-appointment="appt-annual">Voir détails</button><button class="icon-btn">•••</button>
+          </div>
+          <div class="calendar-row">
+            <button style="border:0;background:transparent;text-align:left;padding:0" data-appointment="appt-cvc"><strong>Entretien préventif – CVC</strong><div class="row-sub">Accès au logement requis</div></button>
+            <div>Mar. 15 oct. 2024</div><div>13:00 – 16:00<br><span class="muted">Apt 101</span></div><span class="status planned">Prévu</span>
+            <button class="btn" data-appointment="appt-cvc">Voir détails</button><button class="icon-btn">•••</button>
+          </div>
+        </div>
+
+        <div class="card section">
+          <div class="card-title" style="padding:18px 18px 0">Rendez-vous passés</div>
+          <div class="calendar-row">
+            <button style="border:0;background:transparent;text-align:left;padding:0" data-appointment="appt-light-diagnostic"><strong>Diagnostic – éclairage du salon</strong><div class="row-sub">Lié à une demande d’entretien</div></button>
+            <div>Jeu. 5 sept. 2024</div><div>15:00 – 15:30</div><span class="status done">Terminé</span>
+            <button class="btn" data-appointment="appt-light-diagnostic">Voir détails</button><span></span>
+          </div>
+          <div class="calendar-row">
+            <button style="border:0;background:transparent;text-align:left;padding:0" data-appointment="appt-closet"><strong>Réparation – porte de garde-robe</strong><div class="row-sub">Demande terminée</div></button>
+            <div>Mer. 14 août 2024</div><div>10:00 – 11:30</div><span class="status done">Terminé</span>
+            <button class="btn" data-appointment="appt-closet">Voir détails</button><span></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section class="page" id="page-calendar">
+        <div class="page-head">
+          <div><button class="btn" data-go="appointments">← Rendez-vous</button><div style="height:12px"></div><div class="eyebrow">Agenda</div><h1>Calendrier</h1><div class="subtitle">Visualisez les rendez-vous et inspections qui concernent votre logement.</div></div>
+          <div class="actions"><button class="btn" onclick="toast('Calendrier synchronisé.')">Synchroniser</button></div>
+        </div>
+        <div class="calendar-shell">
+          <div class="card month-card">
+            <div class="month-head"><button class="btn" onclick="toast('Mois précédent — simulation.')">←</button><div><div class="card-title" style="margin:0;text-align:center">Septembre 2024</div><div class="muted" style="text-align:center">Apt 101 · Riverside House</div></div><button class="btn" onclick="toast('Mois suivant — simulation.')">→</button></div>
+            <div class="month-grid">
+              <div class="day-name">Lun</div><div class="day-name">Mar</div><div class="day-name">Mer</div><div class="day-name">Jeu</div><div class="day-name">Ven</div><div class="day-name">Sam</div><div class="day-name">Dim</div>
+
+              <div class="day muted-day"><span class="day-num">26</span></div><div class="day muted-day"><span class="day-num">27</span></div><div class="day muted-day"><span class="day-num">28</span></div><div class="day muted-day"><span class="day-num">29</span></div><div class="day muted-day"><span class="day-num">30</span></div><div class="day muted-day"><span class="day-num">31</span></div><div class="day"><span class="day-num">1</span></div>
+
+              <div class="day"><span class="day-num">2</span></div><div class="day"><span class="day-num">3</span></div><div class="day"><span class="day-num">4</span></div>
+              <div class="day"><span class="day-num">5</span><button class="event-button green" data-appointment="appt-light-diagnostic">Diagnostic éclairage · 15:00</button></div>
+              <div class="day"><span class="day-num">6</span></div><div class="day"><span class="day-num">7</span></div><div class="day"><span class="day-num">8</span></div>
+
+              <div class="day"><span class="day-num">9</span></div><div class="day"><span class="day-num">10</span></div><div class="day"><span class="day-num">11</span></div>
+              <div class="day today"><span class="day-num">12</span><button class="event-button" data-appointment="appt-light-repair">Éclairage salon · 14:00</button></div>
+              <div class="day"><span class="day-num">13</span><button class="event-button green" data-appointment="appt-faucet">Robinet cuisine · 10:00</button></div>
+              <div class="day"><span class="day-num">14</span></div><div class="day"><span class="day-num">15</span></div>
+
+              <div class="day"><span class="day-num">16</span></div><div class="day"><span class="day-num">17</span></div><div class="day"><span class="day-num">18</span></div><div class="day"><span class="day-num">19</span></div><div class="day"><span class="day-num">20</span></div><div class="day"><span class="day-num">21</span></div><div class="day"><span class="day-num">22</span></div>
+
+              <div class="day"><span class="day-num">23</span><button class="event-button" data-appointment="appt-annual">Inspection annuelle · 10:00</button></div>
+              <div class="day"><span class="day-num">24</span></div><div class="day"><span class="day-num">25</span></div><div class="day"><span class="day-num">26</span></div><div class="day"><span class="day-num">27</span></div><div class="day"><span class="day-num">28</span></div><div class="day"><span class="day-num">29</span></div>
+
+              <div class="day"><span class="day-num">30</span></div><div class="day muted-day"><span class="day-num">1</span></div><div class="day muted-day"><span class="day-num">2</span></div><div class="day muted-day"><span class="day-num">3</span></div><div class="day muted-day"><span class="day-num">4</span></div><div class="day muted-day"><span class="day-num">5</span></div><div class="day muted-day"><span class="day-num">6</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="card pad"><div class="card-title">À venir</div>
+              <div class="list">
+                <button class="row clickable" data-appointment="appt-light-repair"><div class="row-icon" data-icon="bulb"></div><div class="grow"><div class="row-title">Intervention – éclairage du salon</div><div class="row-sub">12 sept. · 14:00 – 15:00</div></div><span class="chev">›</span></button>
+                <button class="row clickable" data-appointment="appt-faucet"><div class="row-icon" data-icon="wrench"></div><div class="grow"><div class="row-title">Intervention – robinet de cuisine</div><div class="row-sub">13 sept. · 10:00 – 12:00</div></div><span class="chev">›</span></button>
+                <button class="row clickable" data-appointment="appt-annual"><div class="row-icon" data-icon="calendar"></div><div class="grow"><div class="row-title">Inspection annuelle du logement</div><div class="row-sub">23 sept. · 10:00 – 10:30</div></div><span class="chev">›</span></button>
+              </div>
+            </div>
+            <div class="card pad section"><div class="card-title">Historique</div><button class="btn" style="width:100%" data-go="appointment-history">Voir les rendez-vous passés</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- APPOINTMENT HISTORY -->
+      <section class="page" id="page-appointment-history">
+        <div class="page-head"><div><button class="btn" data-go="appointments">← Rendez-vous</button><div style="height:12px"></div><div class="eyebrow">Historique</div><h1>Rendez-vous passés</h1><div class="subtitle">Consultez les détails des rendez-vous qui ont réellement eu lieu.</div></div></div>
+        <div class="card">
+          <div class="history-row"><div><strong>Diagnostic – éclairage du salon</strong><div class="row-sub">Lié à la demande « Éclairage du salon défectueux »</div></div><div>5 sept. 2024</div><div>15:00 – 15:30</div><span class="status done">Terminé</span><button class="btn" data-appointment="appt-light-diagnostic">Voir détails</button></div>
+          <div class="history-row"><div><strong>Réparation – porte de garde-robe</strong><div class="row-sub">Liée à une demande terminée</div></div><div>14 août 2024</div><div>10:00 – 11:30</div><span class="status done">Terminé</span><button class="btn" data-appointment="appt-closet">Voir détails</button></div>
+          <div class="history-row"><div><strong>Inspection annuelle 2023</strong><div class="row-sub">Inspection périodique du logement</div></div><div>23 avr. 2024</div><div>09:00 – 09:30</div><span class="status done">Terminé</span><button class="btn" data-appointment="appt-annual-old">Voir détails</button></div>
+        </div>
+      </section>
+
+      <!-- APPOINTMENT DETAIL -->
+      <section class="page" id="page-appointment-detail">
+        <div class="page-head">
+          <div><button class="btn" data-go="appointments">← Rendez-vous</button><div style="height:12px"></div><div class="eyebrow" id="appointmentDetailEyebrow">Rendez-vous</div><h1 id="appointmentDetailTitle"></h1><div class="subtitle" id="appointmentDetailDate"></div></div>
+          <span class="status planned" id="appointmentDetailStatus"></span>
+        </div>
+        <div class="grid two">
+          <div class="card pad"><div class="card-title">Détails</div>
+            <div class="detail-kv"><strong>Type</strong><span id="appointmentDetailType"></span></div>
+            <div class="detail-kv"><strong>Date et heure</strong><span id="appointmentDetailWhen"></span></div>
+            <div class="detail-kv"><strong>Lieu</strong><span id="appointmentDetailLocation"></span></div>
+            <div class="detail-kv"><strong>Contexte</strong><span id="appointmentDetailContext"></span></div>
+            <div class="section" id="appointmentRelatedAction"></div>
+          </div>
+          <div class="card pad"><div class="card-title">Ce qu’il faut savoir</div><p id="appointmentDetailSummary"></p><div id="appointmentActionButtons"></div></div>
+        </div>
+        <div class="manager-strip"><div class="row-icon" data-icon="user"></div><div class="grow"><strong>Une question sur ce rendez-vous ?</strong><div class="meta">Communiquez avec Gestion immobilière Riverside.</div></div><button class="btn primary" data-go="new-request">Faire une demande</button></div>
+      </section>
+
+      <!-- DOCUMENTS -->
+      <section class="page" id="page-documents">
+        <div class="page-head"><div><div class="eyebrow">Fichiers</div><h1>Documents</h1><div class="subtitle">Accédez à tous vos documents en un seul endroit.</div></div><div class="actions"><button class="btn primary" data-go="new-request"><span class="icon" data-icon="wrench"></span> Faire une demande</button></div></div>
+        <div class="search" style="max-width:none;margin-bottom:20px"><div class="icon" data-icon="search"></div><input placeholder="Rechercher un document..."></div>
+        <div class="card">
+          <div class="card-title" style="padding:18px 18px 0">Mes documents</div>
+          <div class="doc-row"><div class="row-icon" data-icon="file"></div><div><div class="row-title">Bail</div><div class="row-sub">Signé le 1er juillet 2023 · PDF · 2,1 Mo</div></div><button class="btn soft" data-document="lease">Voir</button><button class="icon-btn">•••</button></div>
+          <div class="doc-row"><div class="row-icon" data-icon="file"></div><div><div class="row-title">Avis de renouvellement</div><div class="row-sub">Reçu le 12 mai 2024 · PDF · 1,4 Mo</div></div><button class="btn soft" data-document="renewal">Voir</button><button class="icon-btn">•••</button></div>
+          <div class="doc-row"><div class="row-icon" data-icon="shield"></div><div><div class="row-title">Assurance locataire</div><div class="row-sub">Fourni par vous · Mis à jour le 3 janvier 2024 · PDF · 1,1 Mo</div></div><button class="btn soft" data-document="insurance">Voir</button><button class="icon-btn">•••</button></div>
+        </div>
+        <div class="card section">
+          <div class="card-title" style="padding:18px 18px 0">Documents de l'immeuble</div>
+          <div class="doc-row"><div class="row-icon" data-icon="file"></div><div><div class="row-title">Règlements de l'immeuble</div><div class="row-sub">Mis à jour le 15 mars 2024 · PDF · 2,8 Mo</div></div><button class="btn soft" data-document="rules">Voir</button><button class="icon-btn">•••</button></div>
+          <div class="doc-row"><div class="row-icon" data-icon="book"></div><div><div class="row-title">Guide du résident</div><div class="row-sub">Mis à jour le 10 janvier 2024 · PDF · 1,9 Mo</div></div><button class="btn soft" data-document="resident-guide">Voir</button><button class="icon-btn">•••</button></div>
+          <div class="doc-row"><div class="row-icon" data-icon="truck"></div><div><div class="row-title">Documents de déménagement</div><div class="row-sub">Mis à jour le 5 avril 2024 · PDF · 1,3 Mo</div></div><button class="btn soft" data-document="moving">Voir</button><button class="icon-btn">•••</button></div>
+        </div>
+      </section>
+
+      <!-- DOCUMENT VIEW -->
+      <section class="page" id="page-document-view">
+        <div class="page-head">
+          <div>
+            <button class="btn" data-go="documents">← Retour aux documents</button>
+            <div style="height:12px"></div>
+            <h1 id="documentDetailTitle"></h1>
+            <div class="subtitle" id="documentDetailMeta"></div>
+          </div>
+          <div class="document-actions" id="documentActionArea"></div>
+        </div>
+        <input id="insuranceUploadInput" type="file" accept=".pdf,.jpg,.jpeg,.png" hidden>
+        <div class="file-upload-status hidden" id="insuranceUploadStatus">
+          <div class="row-icon" data-icon="file"></div>
+          <div class="grow">
+            <strong id="insuranceUploadedName"></strong>
+            <div class="row-sub">Fichier sélectionné dans cette simulation.</div>
+          </div>
+        </div>
+        <div class="card pad" style="min-height:650px;display:grid;place-items:center;background:#F0F1EE">
+          <div style="width:70%;min-height:560px;background:white;border:1px solid var(--border);box-shadow:0 8px 30px rgba(0,0,0,.08);padding:50px">
+            <div style="font-size:28px;font-weight:850;margin-bottom:18px" id="documentPreviewHeading"></div>
+            <div class="muted" id="documentPreviewSubheading"></div>
+            <hr style="border:0;border-top:1px solid var(--border);margin:30px 0">
+            <div id="documentPreviewBody"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOTICES -->
+      <section class="page" id="page-notices">
+        <div class="page-head"><div><div class="eyebrow">Immeuble</div><h1>Avis</h1><div class="subtitle">Restez informé des nouvelles et des avis importants de votre immeuble.</div></div><div class="actions"><button class="btn primary" data-go="new-request"><span class="icon" data-icon="wrench"></span> Faire une demande</button></div></div>
+        <div class="tabs"><button class="tab active">Tous</button><button class="tab">Important</button><button class="tab">Entretien</button><button class="tab">Info</button></div>
+        <div class="card section">
+          <button class="notice" style="width:100%;border:0;background:white;text-align:left" data-notice="access"><div class="row-icon" data-icon="bell"></div><div><div class="row-sub">12 septembre 2024</div><div class="row-title" style="font-size:18px">Changement d'accès au hall d'entrée</div><div class="row-sub">À compter du 16 septembre, l’accès au hall d’entrée se fera uniquement avec votre puce.</div></div><div><span class="status important">Important</span><div style="margin-top:20px;color:var(--green);font-weight:800">Lire l'avis →</div></div></button>
+          <button class="notice" style="width:100%;border:0;background:white;text-align:left" data-notice="annual"><div class="row-icon" data-icon="calendar"></div><div><div class="row-sub">10 septembre 2024</div><div class="row-title" style="font-size:18px">Inspection annuelle des logements</div><div class="row-sub">Votre unité sera inspectée le 23 septembre, de 10:00 à 10:30.</div></div><div><span class="status maintenance">Entretien</span><div style="margin-top:20px;color:var(--green);font-weight:800">Lire l'avis →</div></div></button>
+          <button class="notice" style="width:100%;border:0;background:white;text-align:left" data-notice="elevator"><div class="row-icon" data-icon="building"></div><div><div class="row-sub">5 septembre 2024</div><div class="row-title" style="font-size:18px">Entretien des ascenseurs</div><div class="row-sub">L’ascenseur principal sera hors service le 18 septembre, de 8:00 à 17:00.</div></div><div><span class="status info">Info</span><div style="margin-top:20px;color:var(--green);font-weight:800">Lire l'avis →</div></div></button>
+        </div>
+      </section>
+
+      <!-- NOTICE DETAIL -->
+      <section class="page" id="page-notice-detail">
+        <div class="page-head"><div><button class="btn" data-go="notices">← Retour aux avis</button><div style="height:12px"></div><div class="eyebrow" id="noticeDetailEyebrow"></div><h1 id="noticeDetailTitle"></h1><div class="subtitle" id="noticeDetailDate"></div></div><span class="status info" id="noticeDetailStatus"></span></div>
+        <div class="grid two">
+          <div class="card pad"><h2 id="noticeDetailHeading"></h2><div id="noticeDetailBody"></div><div class="section" id="noticeDetailAction"></div></div>
+          <div class="card pad"><div class="card-title">À retenir</div><div class="list" id="noticeDetailFacts"></div></div>
+        </div>
+      </section>
+
+      <!-- MARKETPLACE -->
+      <section class="page" id="page-marketplace">
+        <div class="page-head"><div><div class="eyebrow">Logements</div><h1>Chercher un logement</h1><div class="subtitle">Trouvez un logement disponible dans un autre immeuble, quartier ou ville.</div></div></div>
+        <div class="market-toolbar"><div class="search" style="max-width:500px"><div class="icon" data-icon="search"></div><input placeholder="Ville, quartier ou immeuble"></div><button class="pill active">📍 Montréal</button><button class="pill">1 ch.</button><button class="pill">2 ch.</button><button class="pill">Animaux permis</button><button class="pill">⚙ Filtres</button></div>
+        <div class="section-head"><h2>12 logements</h2><button class="link">Pertinence ▾</button></div>
+        <div class="listing-grid">
+          <div class="card listing"><div class="listing-img"><button class="favorite">♡</button></div><div class="listing-body"><div class="listing-title">3 1/2 · Plateau</div><div class="listing-meta">Le Laurent · 1 ch. · 1 sdb · 700 pi²</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="status done">Disponible maintenant</span><button class="btn primary" data-listing="plateau">Voir la fiche</button></div></div></div>
+          <div class="card listing"><div class="listing-img"><button class="favorite">♡</button></div><div class="listing-body"><div class="listing-title">2 chambres · Griffintown</div><div class="listing-meta">Riverside House · 2 ch. · 1 sdb · 950 pi²</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="status done">Disponible maintenant</span><button class="btn primary" data-listing="griffintown">Voir la fiche</button></div></div></div>
+          <div class="card listing"><div class="listing-img"><button class="favorite">♡</button></div><div class="listing-body"><div class="listing-title">1 chambre · Rosemont</div><div class="listing-meta">Les Jardins · 1 ch. · 1 sdb · 620 pi²</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="status maintenance">Disponible le 1er octobre</span><button class="btn primary" data-listing="rosemont">Voir la fiche</button></div></div></div>
+          <div class="card listing"><div class="listing-img"><button class="favorite">♡</button></div><div class="listing-body"><div class="listing-title">3 1/2 · Villeray</div><div class="listing-meta">Le Cartier · 1 ch. · 1 sdb · 680 pi²</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="status done">Disponible maintenant</span><button class="btn primary" data-listing="villeray">Voir la fiche</button></div></div></div>
+        </div>
+      </section>
+
+      <!-- LISTING DETAIL -->
+      <section class="page" id="page-listing-detail">
+        <div class="page-head"><div><button class="btn" data-go="marketplace">← Retour aux logements</button><div style="height:12px"></div><h1 id="listingDetailTitle"></h1><div class="subtitle" id="listingDetailSub"></div></div><div class="actions"><button class="btn" id="listingSaveBtn">♡ Sauvegarder</button><button class="btn primary" onclick="toast('Demande de visite envoyée.')">Demander une visite</button></div></div>
+        <div class="detail-hero"></div>
+        <div class="grid two section">
+          <div class="card pad"><div class="card-title">À propos du logement</div><p id="listingDetailDescription"></p><div class="grid three" id="listingDetailFacts"></div></div>
+          <div class="card pad"><div class="card-title">Disponibilité</div><span class="status done" id="listingDetailAvailability"></span><div class="section"><button class="btn primary" style="width:100%" onclick="toast('Demande de visite envoyée.')">Demander une visite</button></div></div>
+        </div>
+      </section>
+
+      <!-- MANAGER -->
+      <section class="page" id="page-manager">
+        <div class="page-head"><div><button class="btn" data-go="unit">← Mon logement</button><div style="height:12px"></div><h1>Coordonnées du gestionnaire</h1><div class="subtitle">Voici les coordonnées de votre gestionnaire. N'hésitez pas à communiquer avec lui pour toute question concernant votre logement ou l'immeuble.</div></div></div>
+        <div class="manager-grid">
+          <div class="card pad"><div class="row" style="border:0;padding:0"><div class="row-icon" data-icon="building"></div><div><div class="card-title" style="margin:0">Gestion immobilière Riverside</div><div class="muted">Équipe de gestion · Riverside House · Montréal, QC</div></div></div>
+            <div class="section"><div class="small-title">Coordonnées principales</div><div class="list"><div class="row"><div class="row-icon" data-icon="phone"></div><div><div class="row-title">514 555-0123</div><div class="row-sub">Lun. à ven. 9 h – 17 h</div></div></div><div class="row"><div class="row-icon" data-icon="mail"></div><div><div class="row-title">gestion@riversidehouse.ca</div><div class="row-sub">Réponse sous 24 h (jours ouvrables)</div></div></div><div class="row"><div class="row-icon" data-icon="pin"></div><div><div class="row-title">1230, rue Saint-Jacques</div><div class="row-sub">Montréal, QC H3C 1K9</div></div></div></div></div>
+          </div>
+          <div class="card pad"><div class="card-title">Heures d'ouverture du bureau</div><div class="list"><div class="row"><div class="grow">Lundi – Vendredi</div><strong>9 h – 17 h</strong></div><div class="row"><div class="grow">Samedi</div><strong>Fermé</strong></div><div class="row"><div class="grow">Dimanche</div><strong>Fermé</strong></div></div>
+            <div class="section"><div class="small-title">Méthodes de contact privilégiées</div><ol class="muted"><li>Portail Tuneza</li><li>Courriel</li><li>Téléphone pour urgences seulement</li></ol></div>
+          </div>
+        </div>
+        <div class="card pad section" style="background:#EDF8F3"><div class="card-title">Urgence vs demande non urgente</div><div class="grid equal"><div class="row"><div class="row-icon" style="color:#B94C4C" data-icon="alert"></div><div><div class="row-title">Urgence</div><div class="row-sub">Pour toute situation urgente, appelez directement le 514 555-0123.</div></div></div><div class="row"><div class="row-icon" data-icon="message"></div><div><div class="row-title">Demande non urgente</div><div class="row-sub">Utilisez le portail Tuneza pour un suivi plus rapide.</div></div></div></div><button class="btn primary" data-go="new-request" style="width:100%;margin-top:15px">Créer une demande</button></div>
+      </section>
+
+      <!-- MESSAGES -->
+      <section class="page" id="page-messages">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">Inbox résident</div>
+            <h1>Messagerie</h1>
+            <div class="subtitle">Les conversations sont créées uniquement à partir d’une demande. Pour démarrer un nouvel échange, créez d’abord une nouvelle demande.</div>
+          </div>
+          <div class="actions">
+            <button class="btn primary" type="button" data-go="new-request">＋ Nouvelle demande</button>
+          </div>
+        </div>
+
+        <div class="card message-layout">
+          <div class="message-list">
+            <div class="small-title" style="margin:4px 4px 12px">Conversations liées à mes demandes</div>
+
+            <button class="conversation-item active" data-conversation="faucet">
+              <div class="row-icon" data-icon="wrench"></div>
+              <div class="grow">
+                <div class="subject">Demande — Robinet de cuisine qui fuit</div>
+                <div class="preview">Intervention prévue le 13 septembre · 10:00 – 12:00</div>
+              </div>
+              <span class="status planned">Prévu</span>
+            </button>
+
+            <button class="conversation-item" data-conversation="light">
+              <div class="row-icon" data-icon="bulb"></div>
+              <div class="grow">
+                <div class="subject">Demande — Éclairage du salon défectueux</div>
+                <div class="preview">Intervention aujourd’hui · 14:00 – 15:00</div>
+              </div>
+              <span class="status progress">En cours</span>
+            </button>
+
+            <button class="conversation-item" data-conversation="closet">
+              <div class="row-icon" data-icon="door"></div>
+              <div class="grow">
+                <div class="subject">Demande — Porte de garde-robe</div>
+                <div class="preview">Demande terminée · conversation archivée</div>
+              </div>
+              <span class="status done">Terminé</span>
+            </button>
+
+            <div class="new-chat-help" style="margin-top:14px">
+              Une conversation ne peut pas être créée directement depuis la messagerie. Chaque échange doit être rattaché à une demande.
+            </div>
+          </div>
+
+          <div class="thread" id="conversationThread">
+            <div>
+              <div class="chat-title" id="chatTitle">Demande — Robinet de cuisine qui fuit</div>
+              <div class="chat-context" id="chatContext">Apt 101 · Riverside House · Demande d’entretien</div>
+            </div>
+            <div class="messages" id="chatMessages"></div>
+            <div class="composer" id="chatComposer">
+              <input class="input" id="chatMessageInput" placeholder="Écrivez votre message...">
+              <button class="btn primary" type="button" id="sendChatMessage">Envoyer</button>
+            </div>
+            <div class="new-chat-help" id="closedConversationNotice" style="display:none;margin-top:14px">
+              Cette demande est terminée. La conversation est archivée en lecture seule. Pour un nouveau problème, créez une nouvelle demande.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MOVE GUIDE -->
+      <section class="page" id="page-move-guide">
+        <div class="page-head"><div><button class="btn" data-go="unit">← Mon logement</button><div style="height:12px"></div><h1>Guide d'emménagement</h1><div class="subtitle">Tout ce que vous devez savoir pour un emménagement en toute tranquillité.</div></div></div>
+        <div class="unit-hero" style="min-height:250px"><div class="unit-copy"><div><div class="unit-name">Bienvenue chez vous !</div><div class="unit-meta">Voici les étapes et les informations importantes pour faciliter votre emménagement.</div></div></div></div>
+        <div class="guide-grid section">
+          <button class="guide-card"><div class="row-icon" data-icon="truck"></div><div><div class="row-title">Réserver l'ascenseur</div><div class="row-sub">La réservation de l’ascenseur est obligatoire pour tout déménagement.</div></div></button>
+          <button class="guide-card"><div class="row-icon" data-icon="clock"></div><div><div class="row-title">Heures autorisées</div><div class="row-sub">Les déménagements sont permis de 8 h à 17 h.</div></div></button>
+          <button class="guide-card"><div class="row-icon" data-icon="box"></div><div><div class="row-title">Protection des aires communes</div><div class="row-sub">Des protections doivent être installées dans les corridors et ascenseurs.</div></div></button>
+          <button class="guide-card"><div class="row-icon" data-icon="shield"></div><div><div class="row-title">Assurance</div><div class="row-sub">Une preuve d’assurance responsabilité civile peut être requise.</div></div></button>
+          <button class="guide-card"><div class="row-icon" data-icon="check"></div><div><div class="row-title">Checklist avant le jour J</div><div class="row-sub">Assurez-vous d’avoir tout en main avec notre liste de vérification.</div></div></button>
+          <button class="guide-card" data-go="manager"><div class="row-icon" data-icon="user"></div><div><div class="row-title">Contacts utiles</div><div class="row-sub">Tous les contacts importants pour votre emménagement.</div></div></button>
+        </div>
+        <div class="card pad section" style="background:#EDF8F3"><div class="row" style="border:0;background:transparent;padding:0"><div class="row-icon" data-icon="file"></div><div class="grow"><div class="row-title">Télécharger la checklist d'emménagement</div><div class="row-sub">Une version PDF complète avec toutes les étapes.</div></div><button class="btn primary" onclick="toast('Checklist téléchargée.')">Télécharger (PDF)</button></div></div>
+      </section>
+
+      <!-- RULES -->
+      <section class="page" id="page-rules">
+        <div class="page-head"><div><button class="btn" data-go="documents">← Retour aux documents</button><div style="height:12px"></div><h1>Règlements de l'immeuble</h1><div class="subtitle">Dernière mise à jour : 15 mars 2024</div></div><div class="actions"><button class="btn primary" onclick="toast('PDF téléchargé.')">Télécharger (PDF)</button><button class="btn" onclick="toast('Impression simulée.')">Imprimer</button></div></div>
+        <div class="rule-layout">
+          <div class="card toc"><div class="small-title">Dans cette page</div><button class="active">Aperçu</button><button>1. Heures de tranquillité</button><button>2. Aires communes</button><button>3. Gestion des déchets</button><button>4. Animaux de compagnie</button><button>5. Balcons et terrasses</button><button>6. Sécurité</button><button>7. Modifications au logement</button><button>8. Non-respect</button><button>9. Nous joindre</button></div>
+          <div class="card rule-content"><div class="row" style="background:#EDF8F3"><div class="row-icon" data-icon="building"></div><div><div class="row-title">Un milieu de vie agréable pour tous</div><div class="row-sub">Ces règlements visent à assurer la sécurité, le confort et la qualité de vie de tous les résidents.</div></div></div>
+            <div class="rule-section"><h2>1. Heures de tranquillité</h2><p>Les heures de tranquillité sont de 22 h à 7 h, tous les jours. Durant cette période, veuillez limiter le bruit afin de respecter vos voisins.</p></div>
+            <div class="rule-section"><h2>2. Aires communes</h2><p>Les aires communes sont réservées aux résidents et à leurs invités. Veuillez en faire un usage respectueux et garder les lieux propres.</p></div>
+            <div class="rule-section"><h2>3. Gestion des déchets</h2><p>Veuillez jeter vos déchets dans les conteneurs prévus et suivre les consignes de recyclage de la Ville de Montréal.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROFILE -->
+      <section class="page" id="page-profile">
+        <div class="page-head"><div><div class="eyebrow">Compte</div><h1>Mon compte</h1><div class="subtitle">Gérez vos informations personnelles et vos préférences.</div></div></div>
+        <div class="card profile-head"><div class="avatar">MC</div><div class="grow"><div class="card-title" style="margin:0">Maya C.</div><div class="muted">Locataire depuis août 2024 · Apt 101 · Riverside House</div></div><button class="btn">Modifier mon profil</button></div>
+        <div class="grid two section">
+          <div class="card pad"><div class="card-title">Informations personnelles</div><div class="list"><div class="row"><div class="row-icon" data-icon="user"></div><div class="grow">Nom complet</div><strong>Maya C.</strong></div><div class="row"><div class="row-icon" data-icon="mail"></div><div class="grow">Courriel</div><strong>maya.c@example.ca</strong></div><div class="row"><div class="row-icon" data-icon="phone"></div><div class="grow">Téléphone</div><strong>514 555-0187</strong></div><div class="row"><div class="row-icon" data-icon="globe"></div><div class="grow">Langue préférée</div><strong>Français (Canada)</strong></div></div></div>
+          <div class="card pad"><div class="card-title">Préférences de notification</div><div class="list"><div class="row"><div class="grow"><div class="row-title">Notifications par courriel</div><div class="row-sub">Recevez les avis importants par courriel.</div></div><span class="status done">Activées</span></div><div class="row"><div class="grow"><div class="row-title">Notifications push</div><div class="row-sub">Recevez des notifications dans votre navigateur.</div></div><span class="status done">Activées</span></div></div></div>
+        </div>
+        <div class="card pad section"><div class="card-title">Sécurité et accès</div><div class="list"><button class="row clickable"><div class="row-icon" data-icon="lock"></div><div class="grow row-title">Mot de passe</div><span class="chev">›</span></button><button class="row clickable"><div class="row-icon" data-icon="monitor"></div><div class="grow row-title">Appareils et sessions</div><span class="chev">›</span></button><button class="row clickable danger"><div class="row-icon" data-icon="logout"></div><div class="grow row-title">Déconnexion</div></button></div></div>
+      </section>
+
+      <!-- NOTIFICATIONS PAGE -->
+      <section class="page" id="page-notifications">
+        <div class="page-head"><div><div class="eyebrow">Centre de notifications</div><h1>Notifications</h1><div class="subtitle">Chaque notification vous ramène directement vers l’élément concerné.</div></div></div>
+        <div class="tabs"><button class="tab active">Toutes (7)</button><button class="tab">Non lues (7)</button><button class="tab">Système (0)</button></div>
+        <div class="card section">
+          <button class="notification-row clickable" style="width:100%;border-left:0;border-right:0;border-top:0;background:white;text-align:left" data-request="light"><div class="row-icon" data-icon="bulb"></div><div><div class="row-title">Demande mise à jour</div><div class="row-sub">« Éclairage du salon défectueux » est maintenant en cours.</div></div><div class="muted">Il y a 2 h</div></button>
+          <button class="notification-row clickable" style="width:100%;border-left:0;border-right:0;border-top:0;background:white;text-align:left" data-appointment="appt-faucet"><div class="row-icon" data-icon="calendar"></div><div><div class="row-title">Rappel de rendez-vous</div><div class="row-sub">Intervention pour le robinet demain, de 10:00 à 12:00.</div></div><div class="muted">Il y a 4 h</div></button>
+          <button class="notification-row clickable" style="width:100%;border-left:0;border-right:0;border-top:0;background:white;text-align:left" data-document="renewal"><div class="row-icon" data-icon="file"></div><div><div class="row-title">Nouveau document</div><div class="row-sub">Votre avis de renouvellement est disponible.</div></div><div class="muted">Il y a 1 j</div></button>
+          <button class="notification-row clickable" style="width:100%;border-left:0;border-right:0;border-top:0;background:white;text-align:left" data-notice="annual"><div class="row-icon" data-icon="megaphone"></div><div><div class="row-title">Avis de l'immeuble</div><div class="row-sub">Inspection annuelle de votre logement le 23 septembre.</div></div><div class="muted">Il y a 2 j</div></button>
+          <button class="notification-row clickable" style="width:100%;border-left:0;border-right:0;border-top:0;background:white;text-align:left" data-go="messages"><div class="row-icon" data-icon="message"></div><div><div class="row-title">Réponse à votre message</div><div class="row-sub">Le gestionnaire a répondu à votre question sur l’accès pendant l’entretien.</div></div><div class="muted">Il y a 3 j</div></button>
+          <button class="notification-row clickable" style="width:100%;border-left:0;border-right:0;border-top:0;background:white;text-align:left" data-listing="griffintown"><div class="row-icon" data-icon="home"></div><div><div class="row-title">Nouveau logement correspondant</div><div class="row-sub">Un 2 chambres à Griffintown est disponible maintenant.</div></div><div class="muted">Il y a 5 j</div></button>
+          <button class="notification-row clickable" style="width:100%;border-left:0;border-right:0;border-top:0;background:white;text-align:left" data-request="faucet"><div class="row-icon" data-icon="wrench"></div><div><div class="row-title">Demande planifiée</div><div class="row-sub">L’intervention pour votre robinet est prévue le 13 septembre.</div></div><div class="muted">Il y a 6 j</div></button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="notifOverlay">
+  <div class="popover">
+    <div class="notifications-header"><strong>Notifications</strong><button class="notifications-view-all" data-go="notifications">Voir tout</button></div>
+    <button class="notification-row clickable" style="width:100%;border:0;background:white;text-align:left" data-request="light"><div class="row-icon" data-icon="bulb"></div><div><div class="row-title">Demande mise à jour</div><div class="row-sub">Éclairage du salon · En cours</div></div><div class="muted">2 h</div></button>
+    <button class="notification-row clickable" style="width:100%;border:0;background:white;text-align:left" data-appointment="appt-faucet"><div class="row-icon" data-icon="calendar"></div><div><div class="row-title">Rappel de rendez-vous</div><div class="row-sub">Robinet demain · 10:00</div></div><div class="muted">4 h</div></button>
+    <button class="notification-row clickable" style="width:100%;border:0;background:white;text-align:left" data-notice="annual"><div class="row-icon" data-icon="megaphone"></div><div><div class="row-title">Avis de l'immeuble</div><div class="row-sub">Inspection annuelle · 23 sept.</div></div><div class="muted">2 j</div></button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const icons = {
+  home:'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/></svg>',
+  wrench:'<svg viewBox="0 0 24 24"><path d="M14 6.5a5 5 0 0 0-6.3 6.3L3 17.5 6.5 21l4.7-4.7A5 5 0 0 0 17.5 10l-3 3-3-3 3-3Z"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h.01M12 14h.01M17 14h.01M7 18h.01M12 18h.01"/></svg>',
+  file:'<svg viewBox="0 0 24 24"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/></svg>',
+  megaphone:'<svg viewBox="0 0 24 24"><path d="M3 11v2c0 1 .8 2 2 2h2l8 4V5l-8 4H5c-1.2 0-2 1-2 2Z"/><path d="M7 15l1 5h3"/></svg>',
+  search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>',
+  bell:'<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>',
+  building:'<svg viewBox="0 0 24 24"><path d="M4 22V4h10v18M14 9h6v13M7 8h3M7 12h3M7 16h3M17 13h1M17 17h1M9 22v-3h3v3"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M8.5 15.5A7 7 0 1 1 15.5 15.5c-.9.8-1.5 1.4-1.5 2.5h-4c0-1.1-.6-1.7-1.5-2.5Z"/></svg>',
+  door:'<svg viewBox="0 0 24 24"><path d="M5 22V3h12v19M8 6h6v16M11 14h.01"/></svg>',
+  info:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>',
+  pin:'<svg viewBox="0 0 24 24"><path d="M12 22s7-7 7-13a7 7 0 0 0-14 0c0 6 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  car:'<svg viewBox="0 0 24 24"><path d="m5 11 2-5h10l2 5"/><rect x="3" y="11" width="18" height="7" rx="2"/><path d="M5 18v3M19 18v3M7 14h.01M17 14h.01"/></svg>',
+  folder:'<svg viewBox="0 0 24 24"><path d="M3 6h6l2 2h10v11H3z"/></svg>',
+  user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 22a8 8 0 0 1 16 0"/></svg>',
+  book:'<svg viewBox="0 0 24 24"><path d="M3 5a6 6 0 0 1 9 2v14a6 6 0 0 0-9-2Z"/><path d="M21 5a6 6 0 0 0-9 2v14a6 6 0 0 1 9-2Z"/></svg>',
+  phone:'<svg viewBox="0 0 24 24"><path d="M6 2l4 4-3 3c2 4 4 6 8 8l3-3 4 4-2 3c-1 1-3 1-4 1C9 20 4 15 2 8c0-1 0-3 1-4Z"/></svg>',
+  mail:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  message:'<svg viewBox="0 0 24 24"><path d="M21 14a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>',
+  truck:'<svg viewBox="0 0 24 24"><path d="M3 5h11v11H3zM14 9h4l3 3v4h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+  shield:'<svg viewBox="0 0 24 24"><path d="M12 3 20 6v6c0 5-3 8-8 10-5-2-8-5-8-10V6Z"/></svg>',
+  box:'<svg viewBox="0 0 24 24"><path d="m4 7 8-4 8 4-8 4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 11 2 2 5-5M8 17h8"/></svg>',
+  clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg>',
+  key:'<svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l2 2M14 9l2 2"/></svg>',
+  alert:'<svg viewBox="0 0 24 24"><path d="M12 3 2 21h20Z"/><path d="M12 9v5M12 18h.01"/></svg>',
+  meter:'<svg viewBox="0 0 24 24"><path d="M4 20h16M7 16v4M12 11v9M17 6v14"/></svg>',
+  bath:'<svg viewBox="0 0 24 24"><path d="M3 12h18v4a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4ZM7 12V6a3 3 0 0 1 6 0"/><path d="M7 20v2M17 20v2"/></svg>',
+  globe:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  monitor:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  logout:'<svg viewBox="0 0 24 24"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10"/></svg>'
+};
+
+function iconHTML(name){ return icons[name] || icons.info; }
+
+const requestsData = {
+  faucet: {
+    title:"Robinet de cuisine qui fuit", submitted:"11 septembre 2024", status:"Prévu", statusClass:"planned", category:"Plomberie", urgency:"Normal",
+    description:"Le robinet de la cuisine goutte continuellement, même lorsqu’il est complètement fermé.",
+    photo:"Photo du robinet", appointmentId:"appt-faucet", history:[],
+    stateTitle:"Intervention planifiée.", stateText:"Une intervention est prévue le 13 septembre, de 10:00 à 12:00.",
+    managerMessage:"Votre demande a été planifiée. Le rendez-vous du 13 septembre est confirmé.", completed:false
+  },
+  light: {
+    title:"Éclairage du salon défectueux", submitted:"28 août 2024", status:"En cours", statusClass:"progress", category:"Électricité", urgency:"Normal",
+    description:"Le plafonnier du salon clignote puis s’éteint après quelques minutes.",
+    photo:"Photo du plafonnier", appointmentId:"appt-light-repair", history:["appt-light-diagnostic"],
+    stateTitle:"La demande est en cours.", stateText:"Un diagnostic a été effectué et l’intervention de réparation est prévue aujourd’hui à 14:00.",
+    managerMessage:"Le diagnostic est terminé. Une intervention est prévue aujourd’hui de 14:00 à 15:00.", completed:false
+  },
+  closet: {
+    title:"Porte de garde-robe", submitted:"12 août 2024", status:"Terminé", statusClass:"done", category:"Menuiserie / Autre", urgency:"Faible",
+    description:"La porte coulissante du garde-robe sortait de son rail et ne fermait plus correctement.",
+    photo:"Photo de la porte", appointmentId:null, history:["appt-closet"],
+    stateTitle:"La demande est terminée.", stateText:"L’intervention du 14 août a été complétée.",
+    managerMessage:"La réparation a été complétée. Faites-nous savoir si le problème revient.", completed:true
+  }
+};
+
+const appointmentsData = {
+  "appt-light-diagnostic": {
+    title:"Diagnostic – éclairage du salon", type:"Entretien", date:"5 septembre 2024", time:"15:00 – 15:30", status:"Terminé", statusClass:"done",
+    location:"Apt 101 · Riverside House", context:"Lié à la demande « Éclairage du salon défectueux »", requestId:"light",
+    summary:"Le diagnostic a confirmé un problème au niveau du plafonnier. Une intervention de réparation a ensuite été planifiée."
+  },
+  "appt-light-repair": {
+    title:"Intervention – éclairage du salon", type:"Entretien", date:"12 septembre 2024", time:"14:00 – 15:00", status:"Prévu", statusClass:"planned",
+    location:"Apt 101 · Riverside House", context:"Lié à la demande « Éclairage du salon défectueux »", requestId:"light",
+    summary:"L’intervention vise à corriger le problème confirmé lors du diagnostic du 5 septembre."
+  },
+  "appt-faucet": {
+    title:"Intervention – robinet de cuisine", type:"Entretien", date:"13 septembre 2024", time:"10:00 – 12:00", status:"Prévu", statusClass:"planned",
+    location:"Apt 101 · Riverside House", context:"Lié à la demande « Robinet de cuisine qui fuit »", requestId:"faucet",
+    summary:"Une intervention est planifiée pour corriger la fuite du robinet de cuisine."
+  },
+  "appt-annual": {
+    title:"Inspection annuelle du logement", type:"Inspection", date:"23 septembre 2024", time:"10:00 – 10:30", status:"Prévu", statusClass:"planned",
+    location:"Apt 101 · Riverside House", context:"Inspection annuelle annoncée dans les avis de l’immeuble", noticeId:"annual",
+    summary:"L’équipe de gestion effectuera l’inspection annuelle de votre unité pendant ce créneau."
+  },
+  "appt-cvc": {
+    title:"Entretien préventif – CVC", type:"Entretien", date:"15 octobre 2024", time:"13:00 – 16:00", status:"Prévu", statusClass:"planned",
+    location:"Apt 101 · Riverside House", context:"Entretien préventif planifié pour le système de chauffage et ventilation",
+    summary:"Un accès au logement est requis pendant la plage horaire indiquée."
+  },
+  "appt-closet": {
+    title:"Réparation – porte de garde-robe", type:"Entretien", date:"14 août 2024", time:"10:00 – 11:30", status:"Terminé", statusClass:"done",
+    location:"Apt 101 · Riverside House", context:"Lié à la demande « Porte de garde-robe »", requestId:"closet",
+    summary:"La porte a été remise sur son rail et son fonctionnement a été vérifié."
+  },
+  "appt-annual-old": {
+    title:"Inspection annuelle 2023", type:"Inspection", date:"23 avril 2024", time:"09:00 – 09:30", status:"Terminé", statusClass:"done",
+    location:"Apt 101 · Riverside House", context:"Inspection périodique du logement",
+    summary:"Inspection périodique complétée sans action requise de la part du résident."
+  }
+};
+
+const documentsData = {
+  lease: {title:"Bail", meta:"Document personnel · PDF · 2,1 Mo", heading:"BAIL DE LOGEMENT", sub:"Riverside House · Apt 101", body:"<p><strong>Locataire :</strong> Maya C.</p><p><strong>Date d’occupation :</strong> 1er septembre 2023</p><p><strong>Adresse :</strong> 1230, rue Saint-Jacques, Montréal, QC</p>"},
+  renewal: {title:"Avis de renouvellement", meta:"Reçu le 12 mai 2024 · PDF · 1,4 Mo", heading:"AVIS DE RENOUVELLEMENT", sub:"Riverside House · Apt 101", body:"<p><strong>Date de l’avis :</strong> 12 mai 2024</p><p><strong>Objet :</strong> Renouvellement du bail</p><p>Consultez le document complet pour les conditions applicables et les dates importantes.</p>"},
+  insurance: {
+    title:"Assurance locataire",
+    meta:"Document fourni par le résident · PDF · 1,1 Mo",
+    heading:"PREUVE D’ASSURANCE LOCATAIRE",
+    sub:"Maya C. · Apt 101",
+    body:"<p><strong>Responsabilité :</strong> Le résident souscrit lui-même à son assurance locataire.</p><p><strong>Statut :</strong> Fichier actuellement au dossier</p><p><strong>Dernière mise à jour :</strong> 3 janvier 2024</p><p>Vous pouvez uploader une nouvelle preuve d’assurance ou télécharger le fichier actuellement enregistré.</p>"
+  },
+  "resident-guide": {title:"Guide du résident", meta:"Mis à jour le 10 janvier 2024 · PDF · 1,9 Mo", heading:"GUIDE DU RÉSIDENT", sub:"Riverside House", body:"<p>Informations utiles concernant l’immeuble, les demandes d’entretien, les accès et les communications avec l’équipe de gestion.</p>"},
+  moving: {title:"Documents de déménagement", meta:"Mis à jour le 5 avril 2024 · PDF · 1,3 Mo", heading:"DOCUMENTS DE DÉMÉNAGEMENT", sub:"Riverside House", body:"<p>Procédures de réservation d’ascenseur, heures autorisées et checklist de déménagement.</p>"}
+};
+
+const noticesData = {
+  access: {
+    title:"Changement d'accès au hall d'entrée", date:"Publié le 12 septembre 2024", status:"Important", statusClass:"important", eyebrow:"Avis important",
+    heading:"Nouvel horaire et accès au hall d’entrée",
+    body:"<p>À compter du 16 septembre, les heures d’accès au hall d’entrée seront de 6 h à 23 h. Votre puce d’accès demeure valide.</p><p>Aucune action n’est requise de votre part.</p>",
+    facts:[["Heures","6 h à 23 h"],["Accès","Votre puce demeure valide"]]
+  },
+  annual: {
+    title:"Inspection annuelle des logements", date:"Publié le 10 septembre 2024", status:"Entretien", statusClass:"maintenance", eyebrow:"Entretien",
+    heading:"Inspection annuelle de votre unité",
+    body:"<p>Votre unité est planifiée pour une inspection le 23 septembre, de 10:00 à 10:30.</p><p>Vous pouvez consulter les détails du rendez-vous à partir de cet avis.</p>",
+    facts:[["Date","23 septembre 2024"],["Heure","10:00 – 10:30"],["Lieu","Apt 101"]],
+    appointmentId:"appt-annual"
+  },
+  elevator: {
+    title:"Entretien des ascenseurs", date:"Publié le 5 septembre 2024", status:"Info", statusClass:"info", eyebrow:"Information",
+    heading:"Ascenseur principal hors service",
+    body:"<p>L’ascenseur principal sera hors service le 18 septembre, de 8:00 à 17:00, pour un entretien préventif.</p><p>L’escalier demeure accessible pendant toute la période.</p>",
+    facts:[["Date","18 septembre 2024"],["Période","8:00 – 17:00"],["Alternative","Escalier accessible"]]
+  }
+};
+
+const listingsData = {
+  plateau: {title:"3 1/2 · Plateau", sub:"Le Laurent · Montréal, QC", description:"Appartement lumineux d’une chambre avec aire de vie ouverte, cuisine moderne et balcon.", beds:"1 chambre", baths:"1 salle de bain", size:"700 pi²", availability:"Disponible maintenant"},
+  griffintown: {title:"2 chambres · Griffintown", sub:"Riverside House · Montréal, QC", description:"Deux chambres, cuisine contemporaine et espace de vie lumineux à proximité du centre-ville.", beds:"2 chambres", baths:"1 salle de bain", size:"950 pi²", availability:"Disponible maintenant"},
+  rosemont: {title:"1 chambre · Rosemont", sub:"Les Jardins · Montréal, QC", description:"Appartement d’une chambre dans un immeuble calme avec espaces verts à proximité.", beds:"1 chambre", baths:"1 salle de bain", size:"620 pi²", availability:"Disponible le 1er octobre"},
+  villeray: {title:"3 1/2 · Villeray", sub:"Le Cartier · Montréal, QC", description:"Logement fonctionnel d’une chambre à proximité des commerces et du transport collectif.", beds:"1 chambre", baths:"1 salle de bain", size:"680 pi²", availability:"Disponible maintenant"}
+};
+
+
+const conversationsData = {
+  faucet: {
+    requestId:"faucet",
+    title:"Demande — Robinet de cuisine qui fuit",
+    context:"Apt 101 · Riverside House · Demande d’entretien",
+    closed:false,
+    messages:[
+      ["them","Bonjour Maya. Votre demande concernant le robinet de cuisine a été prise en charge."],
+      ["them","Une intervention est prévue le 13 septembre, de 10:00 à 12:00."],
+      ["me","Merci. L’accès au logement est autorisé pendant ce créneau."]
+    ]
+  },
+  light: {
+    requestId:"light",
+    title:"Demande — Éclairage du salon défectueux",
+    context:"Apt 101 · Riverside House · Demande d’entretien",
+    closed:false,
+    messages:[
+      ["them","Le diagnostic du plafonnier a été complété."],
+      ["them","L’intervention de réparation est prévue aujourd’hui, de 14:00 à 15:00."],
+      ["me","Parfait, merci pour la mise à jour."]
+    ]
+  },
+  closet: {
+    requestId:"closet",
+    title:"Demande — Porte de garde-robe",
+    context:"Apt 101 · Riverside House · Demande terminée",
+    closed:true,
+    messages:[
+      ["them","La réparation de la porte de garde-robe a été complétée."],
+      ["me","Merci, la porte fonctionne correctement maintenant."],
+      ["them","Parfait. La demande est maintenant fermée."]
+    ]
+  }
+};
+
+let currentConversationId = 'faucet';
+let currentRequestId = 'faucet';
+
+function renderConversation(id){
+  const c=conversationsData[id];
+  if(!c) return;
+
+  currentConversationId=id;
+  document.getElementById('chatTitle').textContent=c.title;
+  document.getElementById('chatContext').textContent=c.context;
+  document.getElementById('chatMessages').innerHTML=c.messages.map(([who,text])=>
+    `<div class="bubble ${who==='me'?'me':'them'}">${text}</div>`
+  ).join('');
+
+  document.querySelectorAll('.conversation-item').forEach(item=>{
+    item.classList.toggle('active',item.dataset.conversation===id);
+  });
+
+  const composer=document.getElementById('chatComposer');
+  const closedNotice=document.getElementById('closedConversationNotice');
+
+  if(c.closed){
+    composer.style.display='none';
+    closedNotice.style.display='block';
+  }else{
+    composer.style.display='flex';
+    closedNotice.style.display='none';
+  }
+}
+
+function bindMessageComposer(){
+  const send=document.getElementById('sendChatMessage');
+  if(!send) return;
+
+  send.addEventListener('click',()=>{
+    const conversation=conversationsData[currentConversationId];
+    if(!conversation) return;
+
+    if(conversation.closed){
+      toast('Cette conversation est fermée.');
+      return;
+    }
+
+    const input=document.getElementById('chatMessageInput');
+    const text=input.value.trim();
+    if(!text) return;
+
+    conversation.messages.push(["me",text]);
+    input.value='';
+    renderConversation(currentConversationId);
+    toast('Message envoyé.');
+  });
+}
+
+function openRequestConversation(){
+  const r=requestsData[currentRequestId];
+  if(!r){ go('messages'); return; }
+
+  if(!conversationsData[currentRequestId]){
+    conversationsData[currentRequestId]={
+      requestId:currentRequestId,
+      title:"Demande — "+r.title,
+      context:"Apt 101 · Riverside House · Demande d’entretien",
+      closed:r.completed===true,
+      messages:[
+        ["them","Cette conversation est liée à votre demande « "+r.title+" »."]
+      ]
+    };
+
+    const list=document.querySelector('.message-list');
+    const helper=list.querySelector('.new-chat-help');
+    const newButton=document.createElement('button');
+    newButton.className='conversation-item';
+    newButton.dataset.conversation=currentRequestId;
+    newButton.innerHTML=`<div class="row-icon">${iconHTML('message')}</div><div class="grow"><div class="subject">Demande — ${r.title}</div><div class="preview">${r.completed?'Demande terminée · conversation archivée':'Conversation liée à la demande'}</div></div><span class="status ${r.statusClass}">${r.status}</span>`;
+    list.insertBefore(newButton,helper);
+  }
+
+  go('messages');
+  renderConversation(currentRequestId);
+}
+
+function initIcons(root=document){
+  root.querySelectorAll('[data-icon]').forEach(el=>{ if(!el.innerHTML.trim()) el.innerHTML=iconHTML(el.dataset.icon); });
+}
+initIcons();
+document.getElementById('helpIcon').innerHTML = iconHTML('info');
+document.getElementById('bellIcon').innerHTML = iconHTML('bell');
+
+const navItems = [
+  ['home','Accueil','home',0],
+  ['unit','Mon logement','home',0],
+  ['requests','Demandes','wrench',2],
+  ['appointments','Rendez-vous','calendar',1],
+  ['documents','Documents','file',1],
+  ['notices','Avis','megaphone',2],
+  ['messages','Messagerie','message',2],
+  ['marketplace','Chercher un logement','search',1]
+];
+const sideNav = document.getElementById('sideNav');
+sideNav.innerHTML = navItems.map(([page,label,icon,count])=>`
+<button class="nav-item ${page==='home'?'active':''}" data-go="${page}">
+  <span class="icon">${iconHTML(icon)}</span><span>${label}</span>${count ? `<span class="nav-badge">${count}</span>` : ''}
+</button>`).join('');
+
+function statusProgress(status){
+  const labels=["Prévu","En cours","Terminé"];
+  const current=Math.max(0,labels.indexOf(status));
+  return labels.map((label,i)=>`<div class="step ${i===current?'active':''}">${label}</div>`).join('');
+}
+
+function openRequest(id){
+  const r=requestsData[id]; if(!r) return;
+  currentRequestId=id;
+  document.getElementById('requestDetailTitle').textContent=r.title;
+  document.getElementById('requestDetailSubmitted').textContent='Soumise le '+r.submitted;
+  const st=document.getElementById('requestDetailStatus'); st.textContent=r.status; st.className='status '+r.statusClass;
+  document.getElementById('requestDetailProgress').innerHTML=statusProgress(r.status);
+  document.getElementById('requestDetailStateTitle').textContent=r.stateTitle;
+  document.getElementById('requestDetailStateText').textContent=r.stateText;
+  document.getElementById('requestDetailCategory').textContent=r.category;
+  document.getElementById('requestDetailUrgency').textContent=r.urgency;
+  document.getElementById('requestDetailDescription').textContent=r.description;
+  document.getElementById('requestDetailPhoto').textContent=r.photo;
+  document.getElementById('requestManagerMessage').textContent=r.managerMessage;
+
+  const appt=document.getElementById('requestAppointmentSection');
+  if(r.appointmentId){
+    const a=appointmentsData[r.appointmentId];
+    appt.innerHTML=`<div class="small-title">Rendez-vous lié</div><button class="row clickable" data-appointment="${r.appointmentId}" style="width:100%"><div class="row-icon">${iconHTML('calendar')}</div><div class="grow"><div class="row-title">${a.title}</div><div class="row-sub">${a.date} · ${a.time}</div></div><span class="status ${a.statusClass}">${a.status}</span><span class="chev">›</span></button>`;
+  } else appt.innerHTML='';
+
+  const hist=document.getElementById('requestHistorySection');
+  if(r.history && r.history.length){
+    hist.innerHTML='<div class="small-title">Rendez-vous passés liés à cette demande</div><div class="list">'+r.history.map(aid=>{const a=appointmentsData[aid];return `<button class="row clickable" data-appointment="${aid}"><div class="row-icon">${iconHTML('calendar')}</div><div class="grow"><div class="row-title">${a.title}</div><div class="row-sub">${a.date} · ${a.time}</div></div><span class="status done">Terminé</span><span class="chev">›</span></button>`;}).join('')+'</div>';
+  } else {
+    hist.innerHTML='<div class="small-title">Historique</div><div class="muted">Aucun rendez-vous passé pour cette demande.</div>';
+  }
+
+  const fb=document.getElementById('requestFeedbackSection');
+  fb.innerHTML=r.completed ? '<div class="small-title">Le problème est-il réglé ?</div><button class="btn soft" onclick="toast(\'Merci pour votre avis.\')">Donner mon avis</button>' : '';
+  initIcons(document.getElementById('page-request-detail'));
+  go('request-detail');
+}
+
+function openAppointment(id){
+  const a=appointmentsData[id]; if(!a) return;
+  document.getElementById('appointmentDetailEyebrow').textContent=a.status==='Terminé'?'Rendez-vous terminé':'Rendez-vous à venir';
+  document.getElementById('appointmentDetailTitle').textContent=a.title;
+  document.getElementById('appointmentDetailDate').textContent=a.date+' · '+a.time;
+  const st=document.getElementById('appointmentDetailStatus'); st.textContent=a.status; st.className='status '+a.statusClass;
+  document.getElementById('appointmentDetailType').textContent=a.type;
+  document.getElementById('appointmentDetailWhen').textContent=a.date+' · '+a.time;
+  document.getElementById('appointmentDetailLocation').textContent=a.location;
+  document.getElementById('appointmentDetailContext').textContent=a.context;
+  document.getElementById('appointmentDetailSummary').textContent=a.summary;
+
+  const related=document.getElementById('appointmentRelatedAction');
+  if(a.requestId) related.innerHTML=`<button class="btn" data-request="${a.requestId}">Voir la demande associée</button>`;
+  else if(a.noticeId) related.innerHTML=`<button class="btn" data-notice="${a.noticeId}">Voir l’avis associé</button>`;
+  else related.innerHTML='';
+
+  const actions=document.getElementById('appointmentActionButtons');
+  if(a.status==='Prévu') actions.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" onclick="toast(\'Modification du rendez-vous — simulation.\')">Modifier</button><button class="btn soft" onclick="toast(\'Rendez-vous confirmé.\')">Confirmer</button></div>';
+  else actions.innerHTML='<span class="status done">Rendez-vous complété</span>';
+  go('appointment-detail');
+}
+
+function openDocument(id){
+  if(id==='rules'){ go('rules'); return; }
+  const d=documentsData[id]; if(!d) return;
+
+  document.getElementById('documentDetailTitle').textContent=d.title;
+  document.getElementById('documentDetailMeta').textContent=d.meta;
+  document.getElementById('documentPreviewHeading').textContent=d.heading;
+  document.getElementById('documentPreviewSubheading').textContent=d.sub;
+  document.getElementById('documentPreviewBody').innerHTML=d.body;
+
+  const actionArea=document.getElementById('documentActionArea');
+  const uploadStatus=document.getElementById('insuranceUploadStatus');
+  uploadStatus.classList.add('hidden');
+
+  if(id==='insurance'){
+    actionArea.innerHTML=`
+      <button class="btn soft" type="button" id="insuranceUploadButton">
+        <span class="icon">${iconHTML('file')}</span> Uploader / remplacer
+      </button>
+      <button class="btn primary" type="button" onclick="toast('Téléchargement de votre assurance simulé.')">
+        Télécharger
+      </button>`;
+    setTimeout(()=>{
+      const uploadBtn=document.getElementById('insuranceUploadButton');
+      if(uploadBtn) uploadBtn.addEventListener('click',()=>document.getElementById('insuranceUploadInput').click());
+    },0);
+  } else {
+    actionArea.innerHTML=`
+      <button class="btn primary" type="button" onclick="toast('Téléchargement simulé.')">
+        Télécharger
+      </button>`;
+  }
+
+  initIcons(document.getElementById('page-document-view'));
+  go('document-view');
+}
+
+function openNotice(id){
+  const n=noticesData[id]; if(!n) return;
+  document.getElementById('noticeDetailEyebrow').textContent=n.eyebrow;
+  document.getElementById('noticeDetailTitle').textContent=n.title;
+  document.getElementById('noticeDetailDate').textContent=n.date;
+  const st=document.getElementById('noticeDetailStatus'); st.textContent=n.status; st.className='status '+n.statusClass;
+  document.getElementById('noticeDetailHeading').textContent=n.heading;
+  document.getElementById('noticeDetailBody').innerHTML=n.body;
+  document.getElementById('noticeDetailFacts').innerHTML=n.facts.map(([k,v])=>`<div class="row"><div class="row-icon">${iconHTML('info')}</div><div><div class="row-title">${k}</div><div class="row-sub">${v}</div></div></div>`).join('');
+  document.getElementById('noticeDetailAction').innerHTML=n.appointmentId
+    ? `<button class="btn primary" data-appointment="${n.appointmentId}">Voir le rendez-vous</button> <button class="btn" data-go="new-request">Faire une demande</button>`
+    : '<button class="btn primary" data-go="new-request">Faire une demande</button>';
+  go('notice-detail');
+}
+
+function openListing(id){
+  const l=listingsData[id]; if(!l) return;
+  document.getElementById('listingDetailTitle').textContent=l.title;
+  document.getElementById('listingDetailSub').textContent=l.sub;
+  document.getElementById('listingDetailDescription').textContent=l.description;
+  document.getElementById('listingDetailAvailability').textContent=l.availability;
+  document.getElementById('listingDetailFacts').innerHTML=`
+    <div class="row"><div class="row-icon">${iconHTML('home')}</div><div><strong>${l.beds}</strong></div></div>
+    <div class="row"><div class="row-icon">${iconHTML('bath')}</div><div><strong>${l.baths}</strong></div></div>
+    <div class="row"><div class="row-icon">${iconHTML('meter')}</div><div><strong>${l.size}</strong></div></div>`;
+  go('listing-detail');
+}
+
+function confirmAppointment(btn){
+  btn.textContent='Confirmé'; btn.classList.remove('primary'); btn.classList.add('soft'); btn.disabled=true; toast('Rendez-vous confirmé.');
+}
+
+const sectionParent = {
+  home:'home',
+  unit:'unit',
+  manager:'unit',
+  'move-guide':'unit',
+
+  requests:'requests',
+  'new-request':'requests',
+  'request-detail':'requests',
+
+  appointments:'appointments',
+  calendar:'appointments',
+  'appointment-history':'appointments',
+  'appointment-detail':'appointments',
+
+  documents:'documents',
+  'document-view':'documents',
+  rules:'documents',
+
+  notices:'notices',
+  'notice-detail':'notices',
+
+  messages:'messages',
+
+  marketplace:'marketplace',
+  'listing-detail':'marketplace',
+
+  notifications:'home',
+  profile:'home'
+};
+
+function go(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const target=document.getElementById('page-'+page);
+  if(target) target.classList.add('active');
+
+  const parentSection=sectionParent[page] || page;
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.toggle('active',n.dataset.go===parentSection);
+  });
+
+  window.scrollTo({top:0,behavior:'smooth'});
+  history.replaceState(null,'','#'+page);
+  document.getElementById('notifOverlay').classList.remove('show');
+}
+
+document.addEventListener('click',e=>{
+  const confirm=e.target.closest('[data-confirm-appointment]');
+  if(confirm){ e.stopPropagation(); confirmAppointment(confirm); return; }
+  const req=e.target.closest('[data-request]'); if(req){ openRequest(req.dataset.request); return; }
+  const appt=e.target.closest('[data-appointment]'); if(appt){ openAppointment(appt.dataset.appointment); return; }
+  const doc=e.target.closest('[data-document]'); if(doc){ openDocument(doc.dataset.document); return; }
+  const notice=e.target.closest('[data-notice]'); if(notice){ openNotice(notice.dataset.notice); return; }
+  const listing=e.target.closest('[data-listing]'); if(listing){ openListing(listing.dataset.listing); return; }
+  const requestChat=e.target.closest('[data-request-chat]');
+  if(requestChat){ openRequestConversation(); return; }
+
+  const conversation=e.target.closest('[data-conversation]');
+  if(conversation){
+    renderConversation(conversation.dataset.conversation);
+    return;
+  }
+
+  const btn=e.target.closest('[data-go]');
+  if(btn){ go(btn.dataset.go); }
+});
+
+bindMessageComposer();
+renderConversation('faucet');
+
+document.getElementById('notifButton').addEventListener('click',()=>document.getElementById('notifOverlay').classList.toggle('show'));
+document.getElementById('notifOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('show')});
+
+document.getElementById('insuranceUploadInput').addEventListener('change',e=>{
+  const file=e.target.files && e.target.files[0];
+  if(!file) return;
+
+  const allowed=['application/pdf','image/jpeg','image/png'];
+  if(!allowed.includes(file.type)){
+    toast('Format non pris en charge. Utilisez PDF, JPG ou PNG.');
+    e.target.value='';
+    return;
+  }
+
+  if(file.size > 10*1024*1024){
+    toast('Le fichier doit faire 10 Mo ou moins.');
+    e.target.value='';
+    return;
+  }
+
+  document.getElementById('insuranceUploadedName').textContent=file.name;
+  document.getElementById('insuranceUploadStatus').classList.remove('hidden');
+  document.getElementById('documentDetailMeta').textContent='Nouveau fichier sélectionné · '+file.name;
+  toast('Nouvelle preuve d’assurance ajoutée dans la simulation.');
+});
+
+document.querySelectorAll('.category').forEach(btn=>btn.addEventListener('click',()=>{
+  const group=btn.parentElement; group.querySelectorAll('.category').forEach(x=>x.classList.remove('selected')); btn.classList.add('selected');
+}));
+
+document.getElementById('submitNewRequest').addEventListener('click',()=>{
+  const title=document.getElementById('newRequestTitle').value.trim();
+  const description=document.getElementById('newRequestDescription').value.trim();
+
+  if(!title){
+    toast('Ajoutez un titre à la demande.');
+    document.getElementById('newRequestTitle').focus();
+    return;
+  }
+
+  if(!description){
+    toast('Ajoutez une description du problème.');
+    document.getElementById('newRequestDescription').focus();
+    return;
+  }
+
+  toast('Demande envoyée.');
+  go('requests');
+});
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{
+  const group=btn.parentElement; group.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); btn.classList.add('active');
+}));
+document.querySelectorAll('.favorite').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();btn.textContent=btn.textContent==='♡'?'♥':'♡';}));
+
+const toastEl=document.getElementById('toast');
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),1800)}
+window.toast=toast; window.go=go; window.openRequest=openRequest; window.openAppointment=openAppointment;
+
+const initial=location.hash.replace('#','');
+if(initial && document.getElementById('page-'+initial)) go(initial);
+</script>
+</body>
+</html>
